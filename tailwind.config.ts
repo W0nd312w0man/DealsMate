@@ -63,6 +63,16 @@ const config = {
           olive: "#a4b15e",
           white: "#ffffff",
         },
+        // Expanded purple palette for consistent usage
+        exp: {
+          purple: "#6a4c93",
+          lavender: "#8a7ab8",
+          lightlavender: "#b3a5d9",
+          darkpurple: "#4a3566",
+          deeppurple: "#352649",
+          pink: "#e56b9f",
+          softpink: "#f5a9cb",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -93,4 +103,3 @@ const config = {
 } satisfies Config
 
 export default config
-
