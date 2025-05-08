@@ -60,9 +60,14 @@
     "zod": "^3.24.1",
     "immer": "latest",
     "use-sync-external-store": "latest",
+    "@auth/core": "latest",
+    "nodemailer": "latest",
     "react-dropzone": "latest",
     "zustand": "latest",
-    "react-beautiful-dnd": "latest"
+    "react-beautiful-dnd": "latest",
+    "bcryptjs": "latest",
+    "next-auth": "latest",
+    "crypto": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",

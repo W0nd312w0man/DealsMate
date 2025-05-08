@@ -1,54 +1,96 @@
-import type React from "react"
-import Link from "next/link"
-import { cn } from "@/lib/utils"
-import { LogoSvg } from "./logo-svg"
+"use client"
 
-export function MainNav({ className, ...props }: React.HTMLAttributes<HTMLElement>) {
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { cn } from "@/lib/utils"
+import {
+  LayoutDashboard,
+  FolderKanban,
+  FileText,
+  Calendar,
+  MessageSquare,
+  Users,
+  Settings,
+  ClipboardList,
+  ShieldCheck,
+} from "lucide-react"
+
+const navItems = [
+  {
+    title: "Dashboard",
+    href: "/dashboard",
+    icon: LayoutDashboard,
+  },
+  {
+    title: "Workspaces",
+    href: "/workspaces",
+    icon: FolderKanban,
+  },
+  {
+    title: "Transactions",
+    href: "/transactions",
+    icon: FileText,
+  },
+  {
+    title: "Tasks",
+    href: "/tasks",
+    icon: ClipboardList,
+  },
+  {
+    title: "Documents",
+    href: "/documents",
+    icon: FileText,
+  },
+  {
+    title: "Calendar",
+    href: "/calendar",
+    icon: Calendar,
+  },
+  {
+    title: "Communication",
+    href: "/communication",
+    icon: MessageSquare,
+  },
+  {
+    title: "Contacts",
+    href: "/contacts",
+    icon: Users,
+  },
+  {
+    title: "Compliance",
+    href: "/compliance",
+    icon: ShieldCheck,
+  },
+  {
+    title: "Settings",
+    href: "/settings",
+    icon: Settings,
+  },
+]
+
+export function MainNav() {
+  const pathname = usePathname()
+
   return (
-    <nav className={cn("flex items-center space-x-4 lg:space-x-6", className)} {...props}>
-      <LogoSvg size={32} showText />
-      <Link href="/dashboard" className="text-sm font-medium transition-colors hover:text-primary">
-        Dashboard
-      </Link>
-      <Link
-        href="/workspaces"
-        className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-      >
-        Workspaces
-      </Link>
-      <Link
-        href="/transactions"
-        className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-      >
-        Transactions
-      </Link>
-      <Link href="/tasks" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
-        Tasks
-      </Link>
-      <Link href="/calendar" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
-        Calendar
-      </Link>
-      <Link
-        href="/documents"
-        className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-      >
-        Documents
-      </Link>
-      <Link href="/contacts" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
-        Contacts
-      </Link>
-      <Link
-        href="/communication"
-        className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-      >
-        Communication
-      </Link>
-      <Link
-        href="/compliance"
-        className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-      >
-        Compliance
-      </Link>
+    <nav className="flex items-center space-x-4 lg:space-x-6">
+      {navItems.map((item) => {
+        const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
+        const Icon = item.icon
+
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={cn(
+              "flex items-center text-sm font-medium transition-colors hover:text-purple-600",
+              isActive ? "text-purple-700 dark:text-purple-400" : "text-muted-foreground",
+            )}
+          >
+            <Icon className="mr-2 h-4 w-4" />
+            <span>{item.title}</span>
+          </Link>
+        )
+      })}
     </nav>
   )
 }

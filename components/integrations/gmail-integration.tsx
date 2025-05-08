@@ -309,7 +309,7 @@ export function GmailIntegration() {
                     </div>
 
                     <div className="space-y-2">
-                      <h4 className="text-sm font-medium">What you&apos;ll get:</h4>
+                      <h4 className="text-sm font-medium">What you'll get:</h4>
                       <ul className="space-y-2">
                         <li className="flex items-start gap-2">
                           <Check className="h-4 w-4 text-green-600 mt-0.5" />
@@ -605,8 +605,8 @@ export function GmailIntegration() {
                   <div className="rounded-md bg-purple-50 p-3">
                     <h4 className="text-xs font-medium text-purple-700">Example</h4>
                     <p className="text-xs text-purple-700 mt-1">
-                      Email with subject &quot;Offer Accepted - 123 Main St&quot; arrives → New workspace created with
-                      address pre-filled
+                      Email with subject "Offer Accepted - 123 Main St" arrives → New workspace created with address
+                      pre-filled
                     </p>
                   </div>
                 </div>
@@ -653,7 +653,7 @@ export function GmailIntegration() {
                   <div className="rounded-md bg-green-50 p-3">
                     <h4 className="text-xs font-medium text-green-700">Example</h4>
                     <p className="text-xs text-green-700 mt-1">
-                      Email contains &quot;Escrow #12345&quot; → Automatically extract and populate escrow number field
+                      Email contains "Escrow #12345" → Automatically extract and populate escrow number field
                     </p>
                   </div>
                 </div>
@@ -673,7 +673,7 @@ export function GmailIntegration() {
                   <div className="rounded-md bg-pink-50 p-3">
                     <h4 className="text-xs font-medium text-pink-700">Example</h4>
                     <p className="text-xs text-pink-700 mt-1">
-                      Email about inspection report → Create &quot;Review Inspection Report&quot; task with due date
+                      Email about inspection report → Create "Review Inspection Report" task with due date
                     </p>
                   </div>
                 </div>
