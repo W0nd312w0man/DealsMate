@@ -1,23 +1,36 @@
 import type React from "react"
-import { MainNav } from "@/components/main-nav"
-import { UserNav } from "@/components/user-nav"
+import type { Metadata } from "next"
+import { Inter, Poppins } from "next/font/google"
+import { ThemeProvider } from "@/components/theme-provider"
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+})
+
+const poppins = Poppins({
+  weight: ["400", "500", "600", "700"],
+  subsets: ["latin"],
+  variable: "--font-poppins",
+})
+
+export const metadata: Metadata = {
+  title: "Admin | DealsMate",
+  description: "Admin portal for DealsMate Transaction Management System",
+}
 
 export default function AdminLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode
-}) {
+}>) {
   return (
-    <div className="flex min-h-screen flex-col">
-      <div className="border-b">
-        <div className="flex h-16 items-center px-4">
-          <MainNav className="mx-6" />
-          <div className="ml-auto flex items-center space-x-4">
-            <UserNav />
-          </div>
-        </div>
-      </div>
-      <div className="flex-1 space-y-4 p-8 pt-6">{children}</div>
-    </div>
+    <html lang="en" className={`${inter.variable} ${poppins.variable}`}>
+      <body className={inter.className}>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+          {children}
+        </ThemeProvider>
+      </body>
+    </html>
   )
 }

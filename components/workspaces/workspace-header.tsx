@@ -16,8 +16,6 @@ import {
   CalendarClock,
   Mail,
   MessageCircle,
-  Palette,
-  Edit,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -30,7 +28,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useWorkspaceParties } from "@/hooks/use-workspace-parties"
 import { WorkspaceConversionDialog } from "./workspace-conversion-dialog"
-import { WorkspaceVisualRenameDialog } from "./workspace-visual-rename-dialog"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { StatusBadge } from "@/components/ui/status-badge"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -48,13 +45,11 @@ interface WorkspaceHeaderProps {
 export function WorkspaceHeader({ workspaceId }: WorkspaceHeaderProps) {
   const workspaceParties = useWorkspaceParties()
   const [showConversionDialog, setShowConversionDialog] = useState(false)
-  const [showRenameDialog, setShowRenameDialog] = useState(false)
   const [showScheduleDialog, setShowScheduleDialog] = useState(false)
   const [showMessageDialog, setShowMessageDialog] = useState(false)
   const [scheduleType, setScheduleType] = useState<"appointment" | "event">("appointment")
   const [isArchiving, setIsArchiving] = useState(false)
   const [isArchived, setIsArchived] = useState(false)
-  const [workspaceName, setWorkspaceName] = useState("")
   const { toast } = useToast()
   const router = useRouter()
 
@@ -77,7 +72,7 @@ export function WorkspaceHeader({ workspaceId }: WorkspaceHeaderProps) {
   // Mock data for the workspace
   const workspace = {
     id: workspaceId,
-    name: workspaceName || "15614 Yermo Street, Whittier, CA 90603",
+    name: "15614 Yermo Street, Whittier, CA 90603",
     address: "15614 Yermo Street, Whittier, CA 90603",
     type: "property",
     status: isArchived ? ("Archived" as TransactionStatus) : ("Active" as TransactionStatus),
@@ -85,10 +80,6 @@ export function WorkspaceHeader({ workspaceId }: WorkspaceHeaderProps) {
     tasks: 3,
     messages: 5,
   }
-
-  useEffect(() => {
-    setWorkspaceName(workspace.name)
-  }, [workspace.name])
 
   // Helper function to get client type icon
   const getClientTypeIcon = (type: string) => {
@@ -143,27 +134,14 @@ export function WorkspaceHeader({ workspaceId }: WorkspaceHeaderProps) {
     }
   }
 
-  const handleRenameWorkspace = (newName: string) => {
-    setWorkspaceName(newName)
-  }
-
   return (
     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <div>
         <div className="flex items-center gap-2">
           {getClientTypeIcon(workspace.type)}
           <h1 className="text-3xl font-bold tracking-tight text-exp-purple dark:text-exp-lavender font-poppins">
-            {workspaceName}
+            {workspace.name}
           </h1>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 rounded-full"
-            onClick={() => setShowRenameDialog(true)}
-          >
-            <Edit className="h-4 w-4 text-muted-foreground" />
-            <span className="sr-only">Rename workspace</span>
-          </Button>
           <StatusBadge status={workspace.status} />
         </div>
         <div className="flex items-center gap-2 mt-1 text-muted-foreground">
@@ -316,10 +294,6 @@ export function WorkspaceHeader({ workspaceId }: WorkspaceHeaderProps) {
           <DropdownMenuContent align="end" className="border-purple-800/20">
             <DropdownMenuLabel>Workspace Actions</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => setShowRenameDialog(true)}>
-              <Palette className="mr-2 h-4 w-4" />
-              Rename Visually
-            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setShowConversionDialog(true)}>
               <ArrowRight className="mr-2 h-4 w-4" />
               Convert to Transaction
@@ -349,15 +323,6 @@ export function WorkspaceHeader({ workspaceId }: WorkspaceHeaderProps) {
         workspaceId={workspaceId}
         open={showConversionDialog}
         onOpenChange={setShowConversionDialog}
-      />
-
-      {/* Visual Rename Dialog */}
-      <WorkspaceVisualRenameDialog
-        workspaceId={workspaceId}
-        currentName={workspaceName}
-        open={showRenameDialog}
-        onOpenChange={setShowRenameDialog}
-        onRename={handleRenameWorkspace}
       />
 
       {/* Schedule Event/Appointment Dialog */}

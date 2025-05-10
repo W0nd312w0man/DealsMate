@@ -8,13 +8,11 @@ import { ClientNameStep } from "./steps/client-name-step"
 import { PartyEntryStep } from "./steps/party-entry-step"
 import { WorkspaceDetailsStep } from "./steps/workspace-details-step"
 import { WorkspaceReviewStep } from "./steps/workspace-review-step"
-import { VisualNamingStep } from "./steps/visual-naming-step"
 import type { EntityType } from "@/hooks/use-contact-manager"
 import { useWorkspaceParties } from "@/hooks/use-workspace-parties"
 
 export type WorkspaceCreationStep =
   | "naming-options"
-  | "visual-naming"
   | "property-address"
   | "client-name"
   | "party-entry"
@@ -49,7 +47,7 @@ export function WorkspaceCreationFlow({ onComplete }: WorkspaceCreationFlowProps
   const [workspaceId] = useState(`WS-${Date.now().toString(36)}`)
 
   const [workspaceData, setWorkspaceData] = useState({
-    namingType: "" as "property" | "client" | "visual" | "",
+    namingType: "" as "property" | "client" | "",
     propertyAddress: "",
     clientName: "",
     workspaceName: "",
@@ -66,21 +64,9 @@ export function WorkspaceCreationFlow({ onComplete }: WorkspaceCreationFlowProps
   }
 
   // Handle naming option selection
-  const handleNamingOptionSelected = (type: "property" | "client" | "visual") => {
+  const handleNamingOptionSelected = (type: "property" | "client") => {
     updateWorkspaceData({ namingType: type })
-    if (type === "visual") {
-      setCurrentStep("visual-naming")
-    } else {
-      setCurrentStep(type === "property" ? "property-address" : "client-name")
-    }
-  }
-
-  // Handle visual naming
-  const handleVisualNameSelected = (name: string) => {
-    updateWorkspaceData({
-      workspaceName: name,
-    })
-    setCurrentStep("party-entry")
+    setCurrentStep(type === "property" ? "property-address" : "client-name")
   }
 
   // Handle property address selection
@@ -172,10 +158,6 @@ export function WorkspaceCreationFlow({ onComplete }: WorkspaceCreationFlowProps
     switch (currentStep) {
       case "naming-options":
         return <WorkspaceNamingStep onSelect={handleNamingOptionSelected} />
-      case "visual-naming":
-        return (
-          <VisualNamingStep onBack={() => setCurrentStep("naming-options")} onNameSelected={handleVisualNameSelected} />
-        )
       case "property-address":
         return (
           <PropertyAddressStep
@@ -190,17 +172,9 @@ export function WorkspaceCreationFlow({ onComplete }: WorkspaceCreationFlowProps
       case "party-entry":
         return (
           <PartyEntryStep
-            role={currentPartyRole || "Buyer"}
+            role={currentPartyRole!}
             partyId={editingPartyId}
-            onBack={() => {
-              if (workspaceData.namingType === "property") {
-                setCurrentStep("property-address")
-              } else if (workspaceData.namingType === "client") {
-                setCurrentStep("client-name")
-              } else {
-                setCurrentStep("visual-naming")
-              }
-            }}
+            onBack={() => setCurrentStep("workspace-details")}
             onSubmit={handlePartySubmitted}
           />
         )
@@ -211,15 +185,7 @@ export function WorkspaceCreationFlow({ onComplete }: WorkspaceCreationFlowProps
             workspaceId={workspaceId}
             buyers={getBuyers()}
             sellers={getSellers()}
-            onBack={() => {
-              if (workspaceData.namingType === "property") {
-                setCurrentStep("property-address")
-              } else if (workspaceData.namingType === "client") {
-                setCurrentStep("client-name")
-              } else {
-                setCurrentStep("visual-naming")
-              }
-            }}
+            onBack={() => setCurrentStep(workspaceData.namingType === "property" ? "property-address" : "client-name")}
             onNext={handleWorkspaceDetailsSubmitted}
             onAddParty={(role) => {
               setCurrentPartyRole(role)

@@ -4,91 +4,90 @@ import type React from "react"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { Eye, EyeOff, Lock, Mail } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { EyeIcon, EyeOffIcon } from "lucide-react"
+import { authenticateAdmin } from "@/lib/auth-actions"
 
 export default function LoginForm() {
   const router = useRouter()
-  const [email, setEmail] = useState("")
+  const [email, setEmail] = useState("ADMIN@LYNQRE.com")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError("")
     setIsLoading(true)
+    setError("")
 
-    // Simulate authentication
-    if (email === "admin@example.com" && password === "password123") {
-      setIsLoading(false)
-      router.push("/admin")
-    } else {
-      setError("Invalid email or password")
+    try {
+      const result = await authenticateAdmin(email, password)
+
+      if (result.success) {
+        router.push("/dashboard")
+      } else {
+        setError(result.message || "Authentication failed")
+      }
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again.")
+      console.error(err)
+    } finally {
       setIsLoading(false)
     }
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div>
-        <Label htmlFor="email">Email address</Label>
-        <div className="mt-1">
-          <Input
-            id="email"
-            name="email"
+      <div className="space-y-2">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+            <Mail className="h-5 w-5" />
+          </div>
+          <input
             type="email"
-            autoComplete="email"
-            required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="block w-full"
+            className="w-full rounded-md border border-gray-300 bg-white py-2 pl-10 pr-3 text-gray-900 placeholder-gray-400 focus:border-exp-purple focus:outline-none focus:ring-1 focus:ring-exp-purple dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500 dark:focus:border-exp-lavender dark:focus:ring-exp-lavender"
+            placeholder="Email address"
+            required
+            disabled
           />
         </div>
       </div>
 
-      <div>
-        <Label htmlFor="password">Password</Label>
-        <div className="mt-1 relative">
-          <Input
-            id="password"
-            name="password"
+      <div className="space-y-2">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+            <Lock className="h-5 w-5" />
+          </div>
+          <input
             type={showPassword ? "text" : "password"}
-            autoComplete="current-password"
-            required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="block w-full pr-10"
+            className="w-full rounded-md border border-gray-300 bg-white py-2 pl-10 pr-10 text-gray-900 placeholder-gray-400 focus:border-exp-purple focus:outline-none focus:ring-1 focus:ring-exp-purple dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500 dark:focus:border-exp-lavender dark:focus:ring-exp-lavender"
+            placeholder="Password"
+            required
           />
           <button
             type="button"
-            className="absolute inset-y-0 right-0 pr-3 flex items-center"
             onClick={() => setShowPassword(!showPassword)}
+            className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-500"
           >
-            {showPassword ? (
-              <EyeOffIcon className="h-5 w-5 text-gray-400" />
-            ) : (
-              <EyeIcon className="h-5 w-5 text-gray-400" />
-            )}
+            {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
           </button>
         </div>
       </div>
 
       {error && (
-        <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
+        <div className="rounded-md bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
+          {error}
+        </div>
       )}
 
-      <div>
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? "Signing in..." : "Sign in"}
-        </Button>
-      </div>
+      <Button type="submit" className="w-full" disabled={isLoading}>
+        {isLoading ? "Signing in..." : "Sign in"}
+      </Button>
     </form>
   )
 }

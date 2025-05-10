@@ -78,7 +78,7 @@ export function ContactSupportDialog({ children }: ContactSupportDialogProps) {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Contact Support</DialogTitle>
+          <DialogTitle>Contact Dealsmate.io Support</DialogTitle>
           <DialogDescription>
             Send a message to our support team. We'll respond via email as soon as possible.
           </DialogDescription>

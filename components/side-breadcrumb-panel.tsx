@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import {
   ChevronRight,
@@ -95,11 +96,10 @@ export function SideBreadcrumbPanel() {
       </button>
 
       <div className={cn("p-4 border-b border-exp-purple/30 flex items-center", isCollapsed ? "justify-center" : "")}>
-        <Link href="/" className="flex items-center space-x-2">
-          <div className="relative h-8 w-8 flex-shrink-0">
-            <img src="/icon-logo_black-background.png" alt="DealsMate Logo" className="w-full h-full object-contain" />
+        <Link href="/" className="flex items-center">
+          <div className="flex items-center px-2">
+            <Image src="/square-logo.png" alt="Dealsmate.io" width={40} height={40} className="rounded-sm" />
           </div>
-          {!isCollapsed && <span className="font-bold text-xl text-exp-lavender">DealsMate</span>}
         </Link>
       </div>
 
