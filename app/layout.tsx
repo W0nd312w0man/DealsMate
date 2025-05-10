@@ -22,10 +22,10 @@ export const metadata: Metadata = {
   description: "Next-generation real estate Transaction Management System",
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/favicon.png", type: "image/png" },
+      { url: "/icon-logo.png", sizes: "any" },
+      { url: "/icon-logo.png", type: "image/png" },
     ],
-    apple: { url: "/apple-touch-icon.png", sizes: "180x180" },
+    apple: { url: "/icon-logo.png", sizes: "180x180" },
   },
   manifest: "/manifest.json",
     generator: 'v0.dev'

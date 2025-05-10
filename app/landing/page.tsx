@@ -10,11 +10,7 @@ export default function LandingPage() {
       <header className="w-full border-b border-white/10 bg-purple-950/70 backdrop-blur-md sticky top-0 z-50">
         <div className="container flex h-16 items-center justify-between py-4">
           <div className="flex items-center py-1">
-            <img
-              src="/dealsmate-logo-new.png"
-              alt="DealsMate.io"
-              className="h-8 sm:h-10 md:h-12 w-auto object-contain"
-            />
+            <img src="/icon-logo.png" alt="DealsMate.io" className="h-10 sm:h-12 md:h-14 w-auto object-contain" />
           </div>
           <div className="hidden md:flex md:items-center md:space-x-6">
             <Link href="#features" className="text-sm font-medium text-purple-200 hover:text-white transition-colors">
