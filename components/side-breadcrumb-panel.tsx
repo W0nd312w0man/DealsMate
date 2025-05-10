@@ -98,7 +98,7 @@ export function SideBreadcrumbPanel() {
       <div className={cn("p-4 border-b border-exp-purple/30 flex items-center", isCollapsed ? "justify-center" : "")}>
         <Link href="/" className="flex items-center">
           <div className="flex items-center px-2">
-            <Image src="/square-logo.png" alt="Dealsmate.io" width={40} height={40} className="rounded-sm" />
+            <Image src="/square-logo.png" alt="Dealsmate.io" width={48} height={48} className="rounded-sm" />
           </div>
         </Link>
       </div>
