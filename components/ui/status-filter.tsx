@@ -1,4 +1,5 @@
 "use client"
+
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -10,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Filter } from "lucide-react"
 import type { TransactionStatus } from "@/types/transaction"
+import { useTransactions } from "@/hooks/use-transactions"
 
 interface StatusFilterProps {
   onStatusChange: (statuses: TransactionStatus[]) => void
@@ -24,16 +26,7 @@ export function StatusFilter({
   label = "Status",
   buttonVariant = "outline",
 }: StatusFilterProps) {
-  // All available statuses
-  const allStatuses: TransactionStatus[] = [
-    "Active",
-    "Pending",
-    "Closing This Month",
-    "Closed",
-    "Withdrawn",
-    "Canceled",
-    "Archived",
-  ]
+  const { allStatuses } = useTransactions()
 
   const handleStatusToggle = (status: TransactionStatus) => {
     if (selectedStatuses.includes(status)) {

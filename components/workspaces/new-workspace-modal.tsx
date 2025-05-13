@@ -12,7 +12,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Card, CardContent } from "@/components/ui/card"
 import { AlertCircle, ArrowLeft, Building, CheckCircle, Home, Loader2, MapPin, User, Users } from "lucide-react"
-import { useWorkspaceParties } from "@/hooks/use-workspace-parties"
+import { useWorkspaceCreation } from "@/hooks/use-workspace-creation"
 
 type NamingType = "property" | "client" | ""
 type ClientType = "Buyer" | "Seller" | ""
@@ -40,20 +40,30 @@ interface NewWorkspaceModalProps {
 }
 
 export function NewWorkspaceModal({ open, onOpenChange }: NewWorkspaceModalProps) {
-  const router = useRouter()
   const { toast } = useToast()
-  const workspaceParties = useWorkspaceParties()
 
-  // Modal state
+  // Use a simplified version of the workspace creation flow for the modal
   const [step, setStep] = useState<"naming" | "property" | "client-type" | "client-details" | "add-another">("naming")
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [workspaceId] = useState(`WS-${Date.now().toString(36)}`)
+  const [namingType, setNamingType] = useState<"property" | "client" | "">("")
+  const [propertyAddress, setPropertyAddress] = useState("")
+  const [clientType, setClientType] = useState<"Buyer" | "Seller" | "">("")
+  const [errors, setErrors] = useState<Record<string, string>>({})
   const [successMessage, setSuccessMessage] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const router = useRouter()
+
+  // Use the workspace creation hook for party management
+  const { workspaceId, handlePartySubmitted, workspaceParties } = useWorkspaceCreation({
+    onComplete: () => {
+      onOpenChange(false)
+      toast({
+        title: "Workspace Created",
+        description: "Your workspace has been created successfully with all parties.",
+      })
+    },
+  })
 
   // Form data
-  const [namingType, setNamingType] = useState<NamingType>("")
-  const [propertyAddress, setPropertyAddress] = useState("")
-  const [clientType, setClientType] = useState<ClientType>("")
   const [clientData, setClientData] = useState<Party>({
     name: "",
     email: "",
@@ -64,7 +74,6 @@ export function NewWorkspaceModal({ open, onOpenChange }: NewWorkspaceModalProps
   })
 
   // Validation
-  const [errors, setErrors] = useState<Record<string, string>>({})
 
   // Reset form when modal opens
   useEffect(() => {
@@ -584,7 +593,7 @@ export function NewWorkspaceModal({ open, onOpenChange }: NewWorkspaceModalProps
           Back
         </Button>
         <Button
-          onClick={handleSaveClient}
+          onClick={handlePartySubmitted}
           disabled={isSubmitting}
           className="bg-gradient-to-r from-purple-600 to-pink-500 hover:opacity-90"
         >

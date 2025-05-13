@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -33,9 +33,9 @@ import {
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu"
 import { CreateTaskModal } from "./create-task-modal"
-import type { Task, TaskOwnerRole, TaskStatus } from "@/types/task"
+import type { TaskStatus } from "@/types/task"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import type { TalosNotification } from "@/components/talos/talos-notifications"
+import { useTasks } from "@/hooks/use-tasks"
 
 interface TasksPanelProps {
   className?: string
@@ -44,12 +44,28 @@ interface TasksPanelProps {
 }
 
 export function TasksPanel({ className, filterPendingOnly = false, onFilterChange }: TasksPanelProps) {
-  const [statusFilter, setStatusFilter] = useState<TaskStatus | "all">(filterPendingOnly ? "today" : "all")
-  const [roleFilters, setRoleFilters] = useState<TaskOwnerRole[]>([])
-  const [nameSearch, setNameSearch] = useState("")
   const [showNameSearch, setShowNameSearch] = useState(false)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  const [tasks, setTasks] = useState<Task[]>(getMockTasks())
+
+  const {
+    filteredTasks,
+    pastDueTasks,
+    statusFilter,
+    setStatusFilter,
+    roleFilters,
+    nameSearch,
+    setNameSearch,
+    toggleTaskCompletion,
+    addTask,
+    clearFilters,
+    handleRoleFilterToggle,
+    getRoleIcon,
+    getRoleName,
+    getStatusFilterName,
+  } = useTasks({
+    initialStatusFilter: filterPendingOnly ? "today" : "all",
+    currentUserRole: "agent",
+  })
 
   // Update filter when prop changes
   useEffect(() => {
@@ -58,59 +74,7 @@ export function TasksPanel({ className, filterPendingOnly = false, onFilterChang
     } else if (!filterPendingOnly && statusFilter === "today") {
       setStatusFilter("all")
     }
-  }, [filterPendingOnly, statusFilter])
-
-  // Filter tasks based on selected filters
-  const filteredTasks = useMemo(() => {
-    return tasks.filter((task) => {
-      // Filter by status
-      if (statusFilter !== "all") {
-        if (statusFilter === "past-due" && !task.isPastDue) return false
-        if (statusFilter === "today" && !task.dueDate.includes("Today")) return false
-        if (statusFilter === "upcoming" && (task.dueDate.includes("Today") || task.isPastDue)) return false
-        if (statusFilter === "completed" && !task.completed) return false
-      }
-
-      // Filter by role
-      if (roleFilters.length > 0 && !roleFilters.includes(task.ownerRole)) {
-        return false
-      }
-
-      // Filter by name
-      if (nameSearch && !task.ownerName.toLowerCase().includes(nameSearch.toLowerCase())) {
-        return false
-      }
-
-      return true
-    })
-  }, [tasks, statusFilter, roleFilters, nameSearch])
-
-  // Group tasks by past due and active
-  const pastDueTasks = useMemo(() => tasks.filter((task) => task.isPastDue && !task.completed), [tasks])
-
-  const toggleTaskCompletion = (id: string) => {
-    const task = tasks.find((t) => t.id === id)
-    setTasks(tasks.map((task) => (task.id === id ? { ...task, completed: !task.completed } : task)))
-
-    // Add notification when a task is completed
-    if (task && !task.completed && window.talosNotifications) {
-      const notification: Omit<TalosNotification, "id" | "timestamp" | "read"> = {
-        type: "task_created",
-        title: "Task completed",
-        description: `You completed the task: "${task.title}"`,
-        actionUrl: "/tasks",
-        actionLabel: "View Tasks",
-        relatedEntity: {
-          type: "task",
-          id: task.id,
-          name: task.title,
-        },
-      }
-
-      // @ts-ignore - Add to global notifications
-      window.talosNotifications.add(notification)
-    }
-  }
+  }, [filterPendingOnly, statusFilter, setStatusFilter])
 
   const handleStatusFilterChange = (newFilter: TaskStatus | "all") => {
     setStatusFilter(newFilter)
@@ -119,87 +83,8 @@ export function TasksPanel({ className, filterPendingOnly = false, onFilterChang
     }
   }
 
-  const handleRoleFilterToggle = (role: TaskOwnerRole) => {
-    setRoleFilters((prev) => (prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role]))
-  }
-
-  const handleAddTask = (newTask: Task) => {
-    setTasks([newTask, ...tasks])
-
-    // Add notification for manually created task
-    if (window.talosNotifications) {
-      const notification: Omit<TalosNotification, "id" | "timestamp" | "read"> = {
-        type: "task_created",
-        title: "Task created",
-        description: `You created a new task: "${newTask.title}"`,
-        actionUrl: "/tasks",
-        actionLabel: "View Task",
-        priority: newTask.priority as any,
-        relatedEntity: {
-          type: "task",
-          id: newTask.id,
-          name: newTask.title,
-        },
-      }
-
-      // @ts-ignore - Add to global notifications
-      window.talosNotifications.add(notification)
-    }
-  }
-
-  const clearFilters = () => {
-    setStatusFilter("all")
-    setRoleFilters([])
-    setNameSearch("")
-    setShowNameSearch(false)
-    if (onFilterChange) {
-      onFilterChange(false)
-    }
-  }
-
-  const getRoleIcon = (role: TaskOwnerRole) => {
-    switch (role) {
-      case "agent":
-        return <User className="h-3 w-3 mr-1" />
-      case "transaction-coordinator":
-        return <Users className="h-3 w-3 mr-1" />
-      case "broker":
-        return <Building2 className="h-3 w-3 mr-1" />
-      case "manager":
-        return <Briefcase className="h-3 w-3 mr-1" />
-      case "system-administrator":
-        return <Robot className="h-3 w-3 mr-1" />
-    }
-  }
-
-  const getRoleName = (role: TaskOwnerRole) => {
-    switch (role) {
-      case "agent":
-        return "Agent"
-      case "transaction-coordinator":
-        return "Transaction Coordinator"
-      case "broker":
-        return "Broker/Compliance Manager"
-      case "manager":
-        return "Team Lead/Manager"
-      case "system-administrator":
-        return "System Administrator"
-    }
-  }
-
-  const getStatusFilterName = (filter: TaskStatus | "all") => {
-    switch (filter) {
-      case "all":
-        return "All Tasks"
-      case "past-due":
-        return "Past Due"
-      case "today":
-        return "Today"
-      case "upcoming":
-        return "Upcoming"
-      case "completed":
-        return "Completed"
-    }
+  const handleAddTask = (newTask: any) => {
+    addTask(newTask)
   }
 
   return (
@@ -213,7 +98,7 @@ export function TasksPanel({ className, filterPendingOnly = false, onFilterChang
               {pastDueTasks.length > 0 && (
                 <span className="text-pink-600 font-medium">{pastDueTasks.length} past due • </span>
               )}
-              {tasks.filter((t) => !t.completed).length} pending tasks
+              {filteredTasks.filter((t) => !t.completed).length} pending tasks
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
@@ -552,136 +437,4 @@ export function TasksPanel({ className, filterPendingOnly = false, onFilterChang
       </CardContent>
     </Card>
   )
-}
-
-// Mock data function
-function getMockTasks(): Task[] {
-  return [
-    {
-      id: "t1",
-      title: "Review purchase agreement for Karen Chen",
-      dueDate: "Today, 2:00 PM",
-      completed: false,
-      priority: "high",
-      transaction: "TX-1234",
-      transactionAddress: "15614 Yermo Street, Los Angeles, CA",
-      client: "Karen Chen",
-      workspaceId: "ws-1",
-      isPastDue: false,
-      createdBy: "manual",
-      ownerRole: "agent",
-      ownerName: "John Smith",
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "t2",
-      title: "Schedule home inspection for 456 Oak Avenue",
-      dueDate: "Today, 5:00 PM",
-      completed: false,
-      priority: "high",
-      transaction: "TX-1235",
-      transactionAddress: "456 Oak Avenue, San Diego, CA",
-      client: "Michael Johnson",
-      workspaceId: "ws-2",
-      isPastDue: false,
-      createdBy: "talos-ai",
-      ownerRole: "transaction-coordinator",
-      ownerName: "Sarah Williams",
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "t3",
-      title: "Send listing photos to Emily Brown",
-      dueDate: "Tomorrow, 10:00 AM",
-      completed: false,
-      priority: "medium",
-      client: "Emily Brown",
-      workspaceId: "ws-3",
-      isPastDue: false,
-      createdBy: "manual",
-      ownerRole: "agent",
-      ownerName: "Robert Davis",
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "t4",
-      title: "Prepare closing documents for Cedar Lane property",
-      dueDate: "Apr 28, 2025",
-      completed: false,
-      priority: "medium",
-      transaction: "TX-1237",
-      transactionAddress: "101 Cedar Lane, San Francisco, CA",
-      client: "Robert Wilson",
-      workspaceId: "ws-4",
-      isPastDue: false,
-      createdBy: "manual",
-      ownerRole: "broker",
-      ownerName: "Jennifer Lopez",
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "t5",
-      title: "Follow up with potential buyers for Maple Street",
-      dueDate: "Apr 29, 2025",
-      completed: false,
-      priority: "low",
-      transaction: "TX-1238",
-      transactionAddress: "789 Maple Street, Oakland, CA",
-      client: "Sarah Smith",
-      workspaceId: "ws-5",
-      isPastDue: false,
-      createdBy: "talos-ai",
-      ownerRole: "agent",
-      ownerName: "Michael Brown",
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "t6",
-      title: "Complete transaction checklist for Oak Avenue",
-      dueDate: "Apr 22, 2025",
-      completed: true,
-      priority: "high",
-      transaction: "TX-1235",
-      transactionAddress: "456 Oak Avenue, San Diego, CA",
-      client: "Michael Johnson",
-      workspaceId: "ws-2",
-      isPastDue: false,
-      createdBy: "manual",
-      ownerRole: "transaction-coordinator",
-      ownerName: "Sarah Williams",
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "t7",
-      title: "Submit disclosure forms for Yermo Street",
-      dueDate: "Apr 20, 2025",
-      completed: false,
-      priority: "high",
-      transaction: "TX-1234",
-      transactionAddress: "15614 Yermo Street, Los Angeles, CA",
-      client: "Karen Chen",
-      workspaceId: "ws-1",
-      isPastDue: true,
-      createdBy: "manual",
-      ownerRole: "broker",
-      ownerName: "David Wilson",
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "t8",
-      title: "Call lender about pre-approval for Robert Wilson",
-      dueDate: "Apr 19, 2025",
-      completed: false,
-      priority: "medium",
-      transaction: "TX-1237",
-      transactionAddress: "101 Cedar Lane, San Francisco, CA",
-      client: "Robert Wilson",
-      workspaceId: "ws-4",
-      isPastDue: true,
-      createdBy: "talos-ai",
-      ownerRole: "manager",
-      ownerName: "Lisa Johnson",
-      createdAt: new Date().toISOString(),
-    },
-  ]
 }

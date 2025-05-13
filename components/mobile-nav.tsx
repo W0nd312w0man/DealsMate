@@ -20,7 +20,7 @@ export function MobileNav() {
       <SheetContent side="left" className="p-0 w-[300px]">
         <div className="p-4 border-b">
           <div className="flex items-center">
-            <Image src="/icon-logo.png" alt="Dealsmate.io" width={32} height={32} className="rounded-sm mr-2" />
+            <Image src="/square-logo.png" alt="Dealsmate.io" width={32} height={32} className="rounded-sm mr-2" />
             <span className="font-bold">Dealsmate.io</span>
           </div>
         </div>

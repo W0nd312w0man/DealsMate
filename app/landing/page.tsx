@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ArrowRight, CheckCircle, ClipboardCheck, MessageSquare, ChevronRight, Sparkles } from "lucide-react"
+import { ArrowRight, CheckCircle, ClipboardCheck, MessageSquare, ChevronRight } from "lucide-react"
 
 export default function LandingPage() {
   return (
@@ -9,8 +9,12 @@ export default function LandingPage() {
       {/* Header */}
       <header className="w-full border-b border-white/10 bg-purple-950/70 backdrop-blur-md sticky top-0 z-50">
         <div className="container flex h-16 items-center justify-between py-4">
-          <div className="flex items-center py-1">
-            <img src="/icon-logo.png" alt="DealsMate.io" className="h-10 sm:h-12 md:h-14 w-auto object-contain" />
+          <div className="relative h-16 w-auto">
+            <img
+              src="/logo_font.png"
+              alt="Dealsmate.io Logo"
+              className="absolute h-32 w-auto object-contain -top-8 left-0"
+            />
           </div>
           <div className="hidden md:flex md:items-center md:space-x-6">
             <Link href="#features" className="text-sm font-medium text-purple-200 hover:text-white transition-colors">
@@ -23,11 +27,21 @@ export default function LandingPage() {
               <Link href="/dashboard">Sign In</Link>
             </Button>
           </div>
+
+          {/* Mobile logo - visible only on small screens */}
+          <div className="md:hidden flex items-center">
+            <div className="h-8 w-auto">
+              <img src="/logo_font.png" alt="Dealsmate.io Logo" className="h-full w-auto object-contain" />
+            </div>
+          </div>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="flex-1 py-12 md:py-24 lg:py-32 relative overflow-hidden">
+      {/* Hero Section - Redesigned */}
+      <section className="relative py-16 md:py-24 lg:py-32 overflow-hidden">
+        {/* Background elements */}
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-950 via-purple-900 to-purple-800"></div>
+
         {/* Decorative elements */}
         <div className="absolute top-1/4 right-1/4 w-64 h-64 bg-purple-400 rounded-full filter blur-3xl opacity-20 animate-blob"></div>
         <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-pink-400 rounded-full filter blur-3xl opacity-10 animate-blob animation-delay-2000"></div>
@@ -38,42 +52,60 @@ export default function LandingPage() {
         <div className="absolute bottom-40 left-20 w-16 h-16 border-2 border-pink-400/30 rotate-12 animate-float animation-delay-2000"></div>
         <div className="absolute top-1/2 right-1/3 w-12 h-12 border-2 border-blue-400/30 rotate-30 animate-float animation-delay-4000"></div>
 
-        <div className="container px-4 mx-auto relative z-20">
-          <div className="grid gap-12 lg:grid-cols-2 items-center">
-            <div className="space-y-8 max-w-2xl">
-              <div className="space-y-4">
-                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-purple-400 font-poppins leading-tight">
-                  TRANSFORM YOUR REAL ESTATE WORKFLOW
-                </h1>
-                <p className="text-xl text-purple-200 leading-relaxed">
-                  Dealsmate.io combines AI-powered document management, automated workflows, and compliance tracking
-                  into one seamless platform.
-                </p>
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left column - Content */}
+            <div className="max-w-2xl">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-purple-300 font-poppins mb-6">
+                Your Deal Starts When the Conversation Does
+              </h1>
+
+              <p className="text-xl text-purple-200 leading-relaxed mb-8">
+                Dealsmate.io turns emails and texts into live, trackable transactions—automatically. No setup. No forms.
+                Just results.
+              </p>
+
+              {/* Feature bullets */}
+              <div className="space-y-4 mb-8">
+                <div className="flex items-start gap-3">
+                  <div className="rounded-full bg-purple-500/20 p-1 mt-1">
+                    <CheckCircle className="h-5 w-5 text-purple-300" />
+                  </div>
+                  <span className="text-purple-100">Auto-create workspaces from client messages</span>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="rounded-full bg-purple-500/20 p-1 mt-1">
+                    <CheckCircle className="h-5 w-5 text-purple-300" />
+                  </div>
+                  <span className="text-purple-100">Smart intake from Gmail and SMS</span>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="rounded-full bg-purple-500/20 p-1 mt-1">
+                    <CheckCircle className="h-5 w-5 text-purple-300" />
+                  </div>
+                  <span className="text-purple-100">Built-in task suggestions and reminders</span>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="rounded-full bg-purple-500/20 p-1 mt-1">
+                    <CheckCircle className="h-5 w-5 text-purple-300" />
+                  </div>
+                  <span className="text-purple-100">Document tracking and compliance alerts</span>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="rounded-full bg-purple-500/20 p-1 mt-1">
+                    <CheckCircle className="h-5 w-5 text-purple-300" />
+                  </div>
+                  <span className="text-purple-100">Unified communication, timeline, and workflow tools</span>
+                </div>
               </div>
 
-              <div className="space-y-3 pt-2">
-                <div className="flex items-center gap-3">
-                  <div className="rounded-full bg-purple-500/20 p-1">
-                    <CheckCircle className="h-5 w-5 text-purple-300" />
-                  </div>
-                  <span className="text-purple-100">AI-powered document management</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="rounded-full bg-purple-500/20 p-1">
-                    <CheckCircle className="h-5 w-5 text-purple-300" />
-                  </div>
-                  <span className="text-purple-100">Streamlined communication</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="rounded-full bg-purple-500/20 p-1">
-                    <CheckCircle className="h-5 w-5 text-purple-300" />
-                  </div>
-                  <span className="text-purple-100">Built-in compliance tracking</span>
-                </div>
-              </div>
-
-              <div className="pt-6">
-                <form className="flex flex-col sm:flex-row gap-2 max-w-md">
+              {/* CTA Section */}
+              <div className="max-w-md">
+                <form className="flex flex-col sm:flex-row gap-3">
                   <Input
                     type="email"
                     placeholder="Enter your email"
@@ -82,7 +114,7 @@ export default function LandingPage() {
                   />
                   <Button
                     type="submit"
-                    className="bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:opacity-90"
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:opacity-90 whitespace-nowrap"
                   >
                     Get Started <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
@@ -91,24 +123,94 @@ export default function LandingPage() {
               </div>
             </div>
 
+            {/* Right column - Visual */}
             <div className="hidden lg:block relative">
-              <div className="relative w-full h-[500px]">
-                {/* 3D illustration */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="relative w-[500px] h-[500px] overflow-hidden">
-                    {/* Multi-layered background effects */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 to-pink-600/10 rounded-full blur-3xl"></div>
-                    <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-pink-500/5 mix-blend-overlay"></div>
-
-                    {/* Overlay gradient for better integration */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-purple-900/10 via-transparent to-pink-600/10 mix-blend-color-dodge"></div>
-
-                    {/* Floating elements positioned relative to the image */}
-                    <div className="absolute top-10 right-20 w-20 h-20 flex items-center justify-center bg-gradient-to-r from-purple-500/70 to-pink-500/70 rounded-lg rotate-12 animate-float z-20 backdrop-blur-sm">
-                      <Sparkles className="h-10 w-10 text-white" />
+              <div className="relative">
+                {/* Main visual element */}
+                <div className="relative w-full h-[500px] rounded-2xl overflow-hidden border border-purple-700/30 shadow-2xl">
+                  {/* Dashboard mockup */}
+                  <div className="absolute inset-0 bg-purple-900/70 backdrop-blur-sm">
+                    {/* Header bar */}
+                    <div className="h-12 bg-purple-800/70 border-b border-purple-700/50 flex items-center px-4">
+                      <div className="w-3 h-3 rounded-full bg-red-400 mr-2"></div>
+                      <div className="w-3 h-3 rounded-full bg-yellow-400 mr-2"></div>
+                      <div className="w-3 h-3 rounded-full bg-green-400 mr-2"></div>
+                      <div className="flex-1"></div>
                     </div>
-                    <div className="absolute bottom-20 left-20 w-16 h-16 bg-gradient-to-r from-blue-500/70 to-purple-500/70 rounded-lg rotate-45 animate-float animation-delay-2000 z-20 backdrop-blur-sm"></div>
-                    <div className="absolute top-1/2 left-1/4 w-12 h-12 bg-gradient-to-r from-pink-500/70 to-purple-500/70 rounded-lg -rotate-12 animate-float animation-delay-4000 z-20 backdrop-blur-sm"></div>
+
+                    {/* Content area */}
+                    <div className="p-4 grid grid-cols-3 gap-4">
+                      {/* Left sidebar */}
+                      <div className="col-span-1 bg-purple-800/50 rounded-lg p-3 h-[430px]">
+                        <div className="h-8 w-24 bg-purple-700/50 rounded-md mb-4"></div>
+                        <div className="space-y-3">
+                          {[...Array(6)].map((_, i) => (
+                            <div key={i} className="flex items-center gap-2">
+                              <div className="w-6 h-6 rounded-full bg-purple-700/70"></div>
+                              <div className="h-4 bg-purple-700/70 rounded w-full"></div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Main content */}
+                      <div className="col-span-2 space-y-4">
+                        {/* Top cards */}
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="bg-purple-800/50 rounded-lg p-3 h-32">
+                            <div className="h-5 w-20 bg-purple-700/50 rounded-md mb-3"></div>
+                            <div className="h-4 bg-purple-700/70 rounded w-3/4 mb-2"></div>
+                            <div className="h-4 bg-purple-700/70 rounded w-1/2 mb-2"></div>
+                            <div className="h-4 bg-purple-700/70 rounded w-2/3"></div>
+                          </div>
+                          <div className="bg-purple-800/50 rounded-lg p-3 h-32">
+                            <div className="h-5 w-20 bg-purple-700/50 rounded-md mb-3"></div>
+                            <div className="h-16 bg-purple-700/30 rounded-lg flex items-center justify-center">
+                              <div className="h-10 w-10 rounded-full bg-purple-600/70 animate-pulse"></div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Bottom card */}
+                        <div className="bg-purple-800/50 rounded-lg p-3 h-[280px]">
+                          <div className="h-5 w-32 bg-purple-700/50 rounded-md mb-4"></div>
+                          <div className="space-y-3">
+                            {[...Array(5)].map((_, i) => (
+                              <div key={i} className="flex items-start gap-3">
+                                <div className="w-8 h-8 rounded-lg bg-purple-700/70 flex-shrink-0 mt-1"></div>
+                                <div className="flex-1 space-y-2">
+                                  <div className="h-4 bg-purple-700/70 rounded w-3/4"></div>
+                                  <div className="h-4 bg-purple-700/70 rounded w-1/2"></div>
+                                </div>
+                                <div className="w-16 h-6 rounded-md bg-purple-600/50 flex-shrink-0"></div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Floating elements */}
+                <div className="absolute -top-6 -right-6 w-24 h-24 bg-gradient-to-r from-purple-500/80 to-pink-500/80 rounded-lg rotate-12 backdrop-blur-sm flex items-center justify-center shadow-lg border border-white/10">
+                  <MessageSquare className="h-10 w-10 text-white" />
+                </div>
+
+                <div className="absolute -bottom-8 -left-8 w-28 h-28 bg-gradient-to-r from-blue-500/80 to-purple-500/80 rounded-lg -rotate-12 backdrop-blur-sm flex items-center justify-center shadow-lg border border-white/10">
+                  <ClipboardCheck className="h-12 w-12 text-white" />
+                </div>
+
+                {/* Notification popup */}
+                <div className="absolute top-1/4 -right-10 w-64 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-xl animate-float">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center flex-shrink-0">
+                      <CheckCircle className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-semibold text-purple-900">New Transaction Created</div>
+                      <div className="text-xs text-purple-700">123 Main St. Purchase Agreement</div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -116,9 +218,16 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Cloud-like shapes at bottom */}
-        <div className="absolute bottom-0 right-0 w-full h-32 bg-white/5 rounded-tl-[100px]"></div>
-        <div className="absolute bottom-0 right-0 w-2/3 h-24 bg-white/5 rounded-tl-[70px]"></div>
+        {/* Bottom wave shape */}
+        <div className="absolute bottom-0 left-0 right-0">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" className="w-full h-auto">
+            <path
+              fill="rgba(109, 40, 217, 0.2)"
+              fillOpacity="1"
+              d="M0,288L48,272C96,256,192,224,288,197.3C384,171,480,149,576,165.3C672,181,768,235,864,234.7C960,235,1056,181,1152,170.7C1248,160,1344,192,1392,208L1440,224L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
+            ></path>
+          </svg>
+        </div>
       </section>
 
       {/* Features Section */}
