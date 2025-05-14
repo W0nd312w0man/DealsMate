@@ -13,6 +13,7 @@ import {
   Settings,
   ClipboardList,
   ShieldCheck,
+  BarChart3,
 } from "lucide-react"
 
 const navItems = [
@@ -35,6 +36,11 @@ const navItems = [
     title: "Tasks",
     href: "/tasks",
     icon: ClipboardList,
+  },
+  {
+    title: "Reports",
+    href: "/reports",
+    icon: BarChart3,
   },
   {
     title: "Documents",

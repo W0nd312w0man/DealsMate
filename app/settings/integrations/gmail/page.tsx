@@ -1,10 +1,10 @@
 import type { Metadata } from "next"
 import { BreadcrumbNav } from "@/components/breadcrumb-nav"
-import { GmailIntegration } from "@/components/integrations/gmail-integration"
+import { GmailIntegrationSettings } from "@/components/settings/gmail-integration-settings"
 
 export const metadata: Metadata = {
   title: "Gmail Integration | DealMate",
-  description: "Connect your Gmail account to automate workspace and transaction creation",
+  description: "Connect your Gmail account to manage email communications within DealMate",
 }
 
 export default function GmailIntegrationPage() {
@@ -14,12 +14,11 @@ export default function GmailIntegrationPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Gmail Integration</h1>
         <p className="text-muted-foreground">
-          Connect your Gmail account to TALOS to automate workspace creation, transaction conversion, and task
-          generation
+          Connect your Gmail account to DealMate to manage email communications directly within the platform
         </p>
       </div>
 
-      <GmailIntegration />
+      <GmailIntegrationSettings />
     </div>
   )
 }

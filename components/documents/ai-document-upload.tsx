@@ -1,19 +1,63 @@
 "use client"
 
-import { useState, useCallback } from "react"
-import { useDropzone } from "react-dropzone"
+import { useState, useCallback, useMemo } from "react"
+import { useDropzone, type FileRejection, type Accept } from "react-dropzone"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Upload, FileText, Loader2, CheckCircle2, X, ChevronDown, ChevronUp, AlertTriangle, Clock } from "lucide-react"
+import {
+  Upload,
+  FileText,
+  Loader2,
+  CheckCircle2,
+  X,
+  ChevronDown,
+  ChevronUp,
+  AlertTriangle,
+  Clock,
+  AlertCircle,
+  FileWarning,
+  Ban,
+} from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Badge } from "@/components/ui/badge"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+
+// File validation constants
+const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
+const MIN_FILE_SIZE = 1024 // 1KB
+const MAX_FILE_NAME_LENGTH = 100
+const ACCEPTED_FILE_TYPES: Accept = {
+  "application/pdf": [".pdf"],
+  "application/msword": [".doc"],
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+  "image/jpeg": [".jpg", ".jpeg"],
+  "image/png": [".png"],
+  "application/vnd.ms-excel": [".xls"],
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
+  "text/plain": [".txt"],
+}
+
+// File validation error types
+type ValidationError = {
+  code: string
+  message: string
+  severity: "error" | "warning"
+}
+
+// File with validation status
+type ValidatedFile = {
+  file: File
+  errors: ValidationError[]
+  warnings: ValidationError[]
+}
 
 export function AIDocumentUpload() {
-  const [files, setFiles] = useState<File[]>([])
+  const [files, setFiles] = useState<ValidatedFile[]>([])
+  const [rejectedFiles, setRejectedFiles] = useState<FileRejection[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
@@ -24,6 +68,7 @@ export function AIDocumentUpload() {
   const [activeTab, setActiveTab] = useState("upload")
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [expandedItem, setExpandedItem] = useState<string | null>(null)
+  const [validationExpanded, setValidationExpanded] = useState(true)
 
   // Mock transactions data
   const transactions = [
@@ -43,6 +88,360 @@ export function AIDocumentUpload() {
     { id: "closing-disclosure", name: "Closing Disclosure" },
     { id: "title-report", name: "Title Report" },
   ]
+
+  // Validate a file and return validation errors
+  const validateFile = (file: File): ValidatedFile => {
+    const errors: ValidationError[] = []
+    const warnings: ValidationError[] = []
+
+    // Check file size (min)
+    if (file.size < MIN_FILE_SIZE) {
+      errors.push({
+        code: "file-too-small",
+        message: `File is too small. Minimum size is ${formatFileSize(MIN_FILE_SIZE)}.`,
+        severity: "error",
+      })
+    }
+
+    // Check file name length
+    if (file.name.length > MAX_FILE_NAME_LENGTH) {
+      warnings.push({
+        code: "file-name-too-long",
+        message: `File name is too long (${file.name.length} chars). Maximum is ${MAX_FILE_NAME_LENGTH} characters.`,
+        severity: "warning",
+      })
+    }
+
+    // Check for special characters in file name
+    const invalidCharsRegex = /[<>:"/\\|?*\x00-\x1F]/g
+    if (invalidCharsRegex.test(file.name)) {
+      warnings.push({
+        code: "invalid-file-name-chars",
+        message: "File name contains invalid characters.",
+        severity: "warning",
+      })
+    }
+
+    // Check file extension matches content type
+    const fileExtension = file.name.split(".").pop()?.toLowerCase() || ""
+    const expectedExtensions = Object.entries(ACCEPTED_FILE_TYPES)
+      .filter(([type]) => file.type === type)
+      .flatMap(([, exts]) => exts.map((ext) => ext.replace(".", "")))
+
+    if (fileExtension && !expectedExtensions.includes(fileExtension)) {
+      warnings.push({
+        code: "extension-mismatch",
+        message: `File extension doesn't match content type. Expected: ${expectedExtensions.join(", ")}`,
+        severity: "warning",
+      })
+    }
+
+    return { file, errors, warnings }
+  }
+
+  // Format file size for display
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return bytes + " B"
+    else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + " KB"
+    else return (bytes / 1048576).toFixed(1) + " MB"
+  }
+
+  // Get file type icon based on file extension
+  const getFileIcon = (fileName: string) => {
+    const extension = fileName.split(".").pop()?.toLowerCase()
+
+    switch (extension) {
+      case "pdf":
+        return <FileText className="h-5 w-5 text-red-600" />
+      case "doc":
+      case "docx":
+        return <FileText className="h-5 w-5 text-blue-600" />
+      case "xls":
+      case "xlsx":
+        return <FileText className="h-5 w-5 text-green-600" />
+      case "jpg":
+      case "jpeg":
+      case "png":
+        return <FileText className="h-5 w-5 text-amber-600" />
+      default:
+        return <FileText className="h-5 w-5 text-purple-600" />
+    }
+  }
+
+  // Handle file drop
+  const onDrop = useCallback((acceptedFiles: File[], fileRejections: FileRejection[]) => {
+    // Process accepted files with additional validation
+    const validatedFiles = acceptedFiles.map(validateFile)
+    setFiles((prev) => [...prev, ...validatedFiles])
+
+    // Store rejected files for error display
+    setRejectedFiles((prev) => [...prev, ...fileRejections])
+  }, [])
+
+  // Configure dropzone
+  const { getRootProps, getInputProps, isDragActive, isDragAccept, isDragReject } = useDropzone({
+    onDrop,
+    accept: ACCEPTED_FILE_TYPES,
+    maxSize: MAX_FILE_SIZE,
+    minSize: MIN_FILE_SIZE,
+    multiple: true,
+  })
+
+  // Remove a file
+  const removeFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  // Remove a rejected file
+  const removeRejectedFile = (index: number) => {
+    setRejectedFiles((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  // Check if there are any files with errors
+  const hasFileErrors = useMemo(() => {
+    return files.some((file) => file.errors.length > 0) || rejectedFiles.length > 0
+  }, [files, rejectedFiles])
+
+  // Check if there are any files with warnings
+  const hasFileWarnings = useMemo(() => {
+    return files.some((file) => file.warnings.length > 0)
+  }, [files])
+
+  // Count total errors and warnings
+  const errorCount = useMemo(() => {
+    return files.reduce((count, file) => count + file.errors.length, 0) + rejectedFiles.length
+  }, [files, rejectedFiles])
+
+  const warningCount = useMemo(() => {
+    return files.reduce((count, file) => count + file.warnings.length, 0)
+  }, [files])
+
+  // Handle upload
+  const handleUpload = async () => {
+    if (files.length === 0 || !selectedTransaction || !documentType || hasFileErrors) return
+
+    setIsUploading(true)
+    setUploadProgress(0)
+
+    // Simulate upload progress
+    const interval = setInterval(() => {
+      setUploadProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval)
+          return 100
+        }
+        return prev + 5
+      })
+    }, 100)
+
+    // Simulate upload delay
+    await new Promise((resolve) => setTimeout(resolve, 2000))
+
+    clearInterval(interval)
+    setUploadProgress(100)
+    setIsUploading(false)
+    setIsProcessing(true)
+    setProcessingProgress(0)
+
+    // Simulate AI processing progress
+    const processingInterval = setInterval(() => {
+      setProcessingProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(processingInterval)
+          return 100
+        }
+        return prev + 2
+      })
+    }, 100)
+
+    // Simulate AI processing delay
+    await new Promise((resolve) => setTimeout(resolve, 5000))
+
+    clearInterval(processingInterval)
+    setProcessingProgress(100)
+
+    // Mock extracted data based on document type
+    if (documentType === "purchase-agreement") {
+      setExtractedData({
+        propertyAddress: {
+          streetAddress: "123 Main St",
+          city: "Anytown",
+          state: "CA",
+          zipCode: "90210",
+        },
+        partiesInvolved: {
+          buyer: "John & Sarah Smith",
+          seller: "Michael Johnson",
+          buyerBroker: "XYZ Realty, Jane Wilson",
+          sellerBroker: "ABC Properties, Robert Davis",
+        },
+        financialDetails: {
+          salesPrice: "$750,000",
+          earnestMoney: "$15,000",
+          loanAmount: "$600,000",
+          closingCosts: "$12,500",
+        },
+        keyDates: {
+          contractDate: "March 15, 2025",
+          inspectionDeadline: "March 25, 2025",
+          financingDeadline: "April 1, 2025",
+          closingDate: "April 15, 2025",
+          possessionDate: "April 16, 2025",
+        },
+        additionalTerms: "Seller to leave all appliances. Buyer requests early occupancy 3 days before closing.",
+        transactionStatus: "review",
+        needsAttention: false,
+        needsCommissionDetails: false,
+        hasPostCloseCorrection: false,
+        hasShortTermAdvancement: false,
+      })
+    } else if (documentType === "inspection-report") {
+      setExtractedData({
+        propertyAddress: {
+          streetAddress: "123 Main St",
+          city: "Anytown",
+          state: "CA",
+          zipCode: "90210",
+        },
+        inspectionDetails: {
+          inspectionDate: "March 20, 2025",
+          inspector: "Quality Home Inspections, LLC",
+          inspectionType: "Full Home Inspection",
+        },
+        majorIssues: [
+          "Roof showing signs of wear, estimated 2-3 years of life remaining",
+          "HVAC system needs servicing",
+          "Minor water damage in basement corner",
+        ],
+        recommendedRepairs: [
+          "Replace weather stripping on exterior doors",
+          "Service HVAC system",
+          "Repair gutter on north side of house",
+        ],
+        overallCondition: "Good with minor issues noted",
+        transactionStatus: "needs-attention",
+        needsAttention: true,
+        needsCommissionDetails: false,
+        hasPostCloseCorrection: false,
+        hasShortTermAdvancement: false,
+      })
+    } else if (documentType === "closing-disclosure") {
+      setExtractedData({
+        propertyAddress: {
+          streetAddress: "456 Oak Ave",
+          city: "Somewhere",
+          state: "CA",
+          zipCode: "90211",
+        },
+        partiesInvolved: {
+          buyer: "Robert Wilson",
+          seller: "Emily & David Brown",
+          buyerBroker: "XYZ Realty",
+          sellerBroker: "ABC Properties",
+        },
+        financialDetails: {
+          salesPrice: "$925,000",
+          earnestMoney: "$20,000",
+          loanAmount: "$740,000",
+          closingCosts: "$18,500",
+        },
+        keyDates: {
+          contractDate: "February 15, 2025",
+          closingDate: "March 30, 2025",
+        },
+        transactionStatus: "commission-review",
+        needsAttention: false,
+        needsCommissionDetails: true,
+        hasPostCloseCorrection: false,
+        hasShortTermAdvancement: false,
+      })
+    } else if (documentType === "addendum") {
+      setExtractedData({
+        propertyAddress: {
+          streetAddress: "789 Pine Rd",
+          city: "Elsewhere",
+          state: "CA",
+          zipCode: "90212",
+        },
+        partiesInvolved: {
+          buyer: "James & Lisa Thompson",
+          seller: "Richard Davis",
+          buyerBroker: "XYZ Realty",
+          sellerBroker: "ABC Properties",
+        },
+        financialDetails: {
+          salesPrice: "$1,050,000",
+          earnestMoney: "$25,000",
+        },
+        keyDates: {
+          contractDate: "January 10, 2025",
+          closingDate: "February 28, 2025",
+        },
+        transactionStatus: "payment-issued",
+        needsAttention: false,
+        needsCommissionDetails: false,
+        hasPostCloseCorrection: true,
+        hasShortTermAdvancement: true,
+      })
+    } else {
+      setExtractedData({
+        propertyAddress: {
+          streetAddress: transactions.find((t) => t.id === selectedTransaction)?.address.split(",")[0] || "123 Main St",
+          city: "Anytown",
+          state: "CA",
+          zipCode: "90210",
+        },
+        partiesInvolved: {
+          buyer: "John & Sarah Smith",
+          seller: "Michael Johnson",
+          buyerBroker: "XYZ Realty",
+          sellerBroker: "ABC Properties",
+        },
+        financialDetails: {
+          salesPrice: "$750,000",
+          earnestMoney: "$15,000",
+        },
+        keyDates: {
+          contractDate: "March 15, 2025",
+          closingDate: "April 15, 2025",
+        },
+        documentType: documentTypes.find((d) => d.id === documentType)?.name || documentType,
+        uploadDate: new Date().toLocaleDateString(),
+        status: "Pending Review",
+        transactionStatus: "broker-approved",
+        needsAttention: false,
+        needsCommissionDetails: false,
+        hasPostCloseCorrection: false,
+        hasShortTermAdvancement: false,
+      })
+    }
+
+    // Add a success message
+    setSuccessMessage("Document successfully processed! Key information has been extracted.")
+
+    setActiveTab("review")
+    setIsProcessing(false)
+  }
+
+  const handleCreateTransaction = () => {
+    // In a real app, this would create a transaction with the extracted data
+    alert("Transaction created successfully with the extracted data!")
+    setFiles([])
+    setRejectedFiles([])
+    setExtractedData(null)
+    setSelectedTransaction("")
+    setDocumentType("")
+    setSuccessMessage(null)
+    setActiveTab("upload")
+  }
+
+  const toggleExpand = (itemId: string) => {
+    if (expandedItem === itemId) {
+      setExpandedItem(null)
+    } else {
+      setExpandedItem(itemId)
+    }
+  }
 
   // Transaction timeline stages
   const getTransactionTimeline = (
@@ -313,251 +712,6 @@ export function AIDocumentUpload() {
     return allStages
   }
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    setFiles((prev) => [...prev, ...acceptedFiles])
-  }, [])
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: {
-      "application/pdf": [".pdf"],
-      "application/msword": [".doc"],
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
-      "image/jpeg": [".jpg", ".jpeg"],
-      "image/png": [".png"],
-    },
-    maxSize: 10485760, // 10MB
-  })
-
-  const removeFile = (index: number) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index))
-  }
-
-  const handleUpload = async () => {
-    if (files.length === 0 || !selectedTransaction || !documentType) return
-
-    setIsUploading(true)
-    setUploadProgress(0)
-
-    // Simulate upload progress
-    const interval = setInterval(() => {
-      setUploadProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval)
-          return 100
-        }
-        return prev + 5
-      })
-    }, 100)
-
-    // Simulate upload delay
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-
-    clearInterval(interval)
-    setUploadProgress(100)
-    setIsUploading(false)
-    setIsProcessing(true)
-    setProcessingProgress(0)
-
-    // Simulate AI processing progress
-    const processingInterval = setInterval(() => {
-      setProcessingProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(processingInterval)
-          return 100
-        }
-        return prev + 2
-      })
-    }, 100)
-
-    // Simulate AI processing delay
-    await new Promise((resolve) => setTimeout(resolve, 5000))
-
-    clearInterval(processingInterval)
-    setProcessingProgress(100)
-
-    // Mock extracted data based on document type
-    if (documentType === "purchase-agreement") {
-      setExtractedData({
-        propertyAddress: {
-          streetAddress: "123 Main St",
-          city: "Anytown",
-          state: "CA",
-          zipCode: "90210",
-        },
-        partiesInvolved: {
-          buyer: "John & Sarah Smith",
-          seller: "Michael Johnson",
-          buyerBroker: "XYZ Realty, Jane Wilson",
-          sellerBroker: "ABC Properties, Robert Davis",
-        },
-        financialDetails: {
-          salesPrice: "$750,000",
-          earnestMoney: "$15,000",
-          loanAmount: "$600,000",
-          closingCosts: "$12,500",
-        },
-        keyDates: {
-          contractDate: "March 15, 2025",
-          inspectionDeadline: "March 25, 2025",
-          financingDeadline: "April 1, 2025",
-          closingDate: "April 15, 2025",
-          possessionDate: "April 16, 2025",
-        },
-        additionalTerms: "Seller to leave all appliances. Buyer requests early occupancy 3 days before closing.",
-        transactionStatus: "review",
-        needsAttention: false,
-        needsCommissionDetails: false,
-        hasPostCloseCorrection: false,
-        hasShortTermAdvancement: false,
-      })
-    } else if (documentType === "inspection-report") {
-      setExtractedData({
-        propertyAddress: {
-          streetAddress: "123 Main St",
-          city: "Anytown",
-          state: "CA",
-          zipCode: "90210",
-        },
-        inspectionDetails: {
-          inspectionDate: "March 20, 2025",
-          inspector: "Quality Home Inspections, LLC",
-          inspectionType: "Full Home Inspection",
-        },
-        majorIssues: [
-          "Roof showing signs of wear, estimated 2-3 years of life remaining",
-          "HVAC system needs servicing",
-          "Minor water damage in basement corner",
-        ],
-        recommendedRepairs: [
-          "Replace weather stripping on exterior doors",
-          "Service HVAC system",
-          "Repair gutter on north side of house",
-        ],
-        overallCondition: "Good with minor issues noted",
-        transactionStatus: "needs-attention",
-        needsAttention: true,
-        needsCommissionDetails: false,
-        hasPostCloseCorrection: false,
-        hasShortTermAdvancement: false,
-      })
-    } else if (documentType === "closing-disclosure") {
-      setExtractedData({
-        propertyAddress: {
-          streetAddress: "456 Oak Ave",
-          city: "Somewhere",
-          state: "CA",
-          zipCode: "90211",
-        },
-        partiesInvolved: {
-          buyer: "Robert Wilson",
-          seller: "Emily & David Brown",
-          buyerBroker: "XYZ Realty",
-          sellerBroker: "ABC Properties",
-        },
-        financialDetails: {
-          salesPrice: "$925,000",
-          earnestMoney: "$20,000",
-          loanAmount: "$740,000",
-          closingCosts: "$18,500",
-        },
-        keyDates: {
-          contractDate: "February 15, 2025",
-          closingDate: "March 30, 2025",
-        },
-        transactionStatus: "commission-review",
-        needsAttention: false,
-        needsCommissionDetails: true,
-        hasPostCloseCorrection: false,
-        hasShortTermAdvancement: false,
-      })
-    } else if (documentType === "addendum") {
-      setExtractedData({
-        propertyAddress: {
-          streetAddress: "789 Pine Rd",
-          city: "Elsewhere",
-          state: "CA",
-          zipCode: "90212",
-        },
-        partiesInvolved: {
-          buyer: "James & Lisa Thompson",
-          seller: "Richard Davis",
-          buyerBroker: "XYZ Realty",
-          sellerBroker: "ABC Properties",
-        },
-        financialDetails: {
-          salesPrice: "$1,050,000",
-          earnestMoney: "$25,000",
-        },
-        keyDates: {
-          contractDate: "January 10, 2025",
-          closingDate: "February 28, 2025",
-        },
-        transactionStatus: "payment-issued",
-        needsAttention: false,
-        needsCommissionDetails: false,
-        hasPostCloseCorrection: true,
-        hasShortTermAdvancement: true,
-      })
-    } else {
-      setExtractedData({
-        propertyAddress: {
-          streetAddress: transactions.find((t) => t.id === selectedTransaction)?.address.split(",")[0] || "123 Main St",
-          city: "Anytown",
-          state: "CA",
-          zipCode: "90210",
-        },
-        partiesInvolved: {
-          buyer: "John & Sarah Smith",
-          seller: "Michael Johnson",
-          buyerBroker: "XYZ Realty",
-          sellerBroker: "ABC Properties",
-        },
-        financialDetails: {
-          salesPrice: "$750,000",
-          earnestMoney: "$15,000",
-        },
-        keyDates: {
-          contractDate: "March 15, 2025",
-          closingDate: "April 15, 2025",
-        },
-        documentType: documentTypes.find((d) => d.id === documentType)?.name || documentType,
-        uploadDate: new Date().toLocaleDateString(),
-        status: "Pending Review",
-        transactionStatus: "broker-approved",
-        needsAttention: false,
-        needsCommissionDetails: false,
-        hasPostCloseCorrection: false,
-        hasShortTermAdvancement: false,
-      })
-    }
-
-    // Add a success message
-    setSuccessMessage("Document successfully processed! Key information has been extracted.")
-
-    setActiveTab("review")
-    setIsProcessing(false)
-  }
-
-  const handleCreateTransaction = () => {
-    // In a real app, this would create a transaction with the extracted data
-    alert("Transaction created successfully with the extracted data!")
-    setFiles([])
-    setExtractedData(null)
-    setSelectedTransaction("")
-    setDocumentType("")
-    setSuccessMessage(null)
-    setActiveTab("upload")
-  }
-
-  const toggleExpand = (itemId: string) => {
-    if (expandedItem === itemId) {
-      setExpandedItem(null)
-    } else {
-      setExpandedItem(itemId)
-    }
-  }
-
   // Render transaction timeline
   const renderTransactionTimeline = (
     status: string,
@@ -629,6 +783,148 @@ export function AIDocumentUpload() {
     )
   }
 
+  // Render file validation summary
+  const renderValidationSummary = () => {
+    if (!hasFileErrors && !hasFileWarnings) return null
+
+    return (
+      <Collapsible
+        open={validationExpanded}
+        onOpenChange={setValidationExpanded}
+        className="mb-4 border rounded-lg overflow-hidden"
+      >
+        <div className={`p-3 ${hasFileErrors ? "bg-red-50" : "bg-amber-50"}`}>
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              {hasFileErrors ? (
+                <AlertCircle className="h-5 w-5 text-red-600" />
+              ) : (
+                <AlertTriangle className="h-5 w-5 text-amber-600" />
+              )}
+              <h3 className={`text-md font-semibold ${hasFileErrors ? "text-red-700" : "text-amber-700"}`}>
+                {hasFileErrors
+                  ? `File Validation Errors (${errorCount})`
+                  : `File Validation Warnings (${warningCount})`}
+              </h3>
+            </div>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="p-0 h-8 w-8">
+                {validationExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </Button>
+            </CollapsibleTrigger>
+          </div>
+          <CollapsibleContent>
+            <div className="mt-2 space-y-3">
+              {/* Rejected files */}
+              {rejectedFiles.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-red-700">Rejected Files</h4>
+                  {rejectedFiles.map((rejection, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between rounded-md border border-red-200 bg-red-50 p-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <FileWarning className="h-5 w-5 text-red-600" />
+                        <div>
+                          <div className="text-sm font-medium">{rejection.file.name}</div>
+                          <div className="text-xs text-red-600">
+                            {rejection.errors.map((e) => e.message).join(", ")}
+                          </div>
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 text-muted-foreground"
+                        onClick={() => removeRejectedFile(index)}
+                      >
+                        <X className="h-4 w-4" />
+                        <span className="sr-only">Remove</span>
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Files with errors */}
+              {files.some((file) => file.errors.length > 0) && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-red-700">Files with Errors</h4>
+                  {files
+                    .filter((file) => file.errors.length > 0)
+                    .map((file, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between rounded-md border border-red-200 bg-red-50 p-2"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <FileWarning className="h-5 w-5 text-red-600" />
+                          <div>
+                            <div className="text-sm font-medium">{file.file.name}</div>
+                            <div className="text-xs text-red-600">
+                              {file.errors.map((e, i) => (
+                                <div key={i}>{e.message}</div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-muted-foreground"
+                          onClick={() => removeFile(files.findIndex((f) => f.file === file.file))}
+                        >
+                          <X className="h-4 w-4" />
+                          <span className="sr-only">Remove</span>
+                        </Button>
+                      </div>
+                    ))}
+                </div>
+              )}
+
+              {/* Files with warnings */}
+              {files.some((file) => file.warnings.length > 0) && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-amber-700">Files with Warnings</h4>
+                  {files
+                    .filter((file) => file.warnings.length > 0)
+                    .map((file, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between rounded-md border border-amber-200 bg-amber-50 p-2"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <AlertTriangle className="h-5 w-5 text-amber-600" />
+                          <div>
+                            <div className="text-sm font-medium">{file.file.name}</div>
+                            <div className="text-xs text-amber-600">
+                              {file.warnings.map((w, i) => (
+                                <div key={i}>{w.message}</div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-muted-foreground"
+                          onClick={() => removeFile(files.findIndex((f) => f.file === file.file))}
+                        >
+                          <X className="h-4 w-4" />
+                          <span className="sr-only">Remove</span>
+                        </Button>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+          </CollapsibleContent>
+        </div>
+      </Collapsible>
+    )
+  }
+
   return (
     <Card className="shadow-soft overflow-hidden">
       <div className="h-1 w-full bg-gradient-to-r from-purple-600 to-pink-500"></div>
@@ -689,29 +985,101 @@ export function AIDocumentUpload() {
             </div>
 
             <div className="grid gap-2">
-              <Label className="text-purple-700">Upload Documents</Label>
+              <div className="flex justify-between items-center">
+                <Label className="text-purple-700">Upload Documents</Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center text-xs text-muted-foreground">
+                        <span className="mr-1">Accepted formats:</span>
+                        <Badge variant="outline" className="text-xs font-normal">
+                          PDF
+                        </Badge>
+                        <Badge variant="outline" className="ml-1 text-xs font-normal">
+                          DOC
+                        </Badge>
+                        <Badge variant="outline" className="ml-1 text-xs font-normal">
+                          DOCX
+                        </Badge>
+                        <Badge variant="outline" className="ml-1 text-xs font-normal">
+                          JPG
+                        </Badge>
+                        <Badge variant="outline" className="ml-1 text-xs font-normal">
+                          PNG
+                        </Badge>
+                        <Badge variant="outline" className="ml-1 text-xs font-normal">
+                          XLS
+                        </Badge>
+                        <Badge variant="outline" className="ml-1 text-xs font-normal">
+                          XLSX
+                        </Badge>
+                        <Badge variant="outline" className="ml-1 text-xs font-normal">
+                          TXT
+                        </Badge>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <div className="space-y-2 p-2">
+                        <p className="font-medium">File Requirements:</p>
+                        <ul className="text-xs space-y-1 list-disc pl-4">
+                          <li>
+                            Size: {formatFileSize(MIN_FILE_SIZE)} - {formatFileSize(MAX_FILE_SIZE)}
+                          </li>
+                          <li>File name: Max {MAX_FILE_NAME_LENGTH} characters</li>
+                          <li>No special characters in file name</li>
+                        </ul>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+
+              {/* Validation summary */}
+              {renderValidationSummary()}
 
               <div
                 {...getRootProps()}
                 className={`
                   border-2 border-dashed rounded-lg p-8 transition-colors
                   ${
-                    isDragActive
-                      ? "border-purple-500 bg-purple-50"
-                      : "border-purple-200 hover:border-purple-300 hover:bg-purple-50/50"
+                    isDragReject
+                      ? "border-red-500 bg-red-50"
+                      : isDragAccept
+                        ? "border-green-500 bg-green-50"
+                        : isDragActive
+                          ? "border-purple-500 bg-purple-50"
+                          : "border-purple-200 hover:border-purple-300 hover:bg-purple-50/50"
                   }
                   ${files.length > 0 ? "pb-2" : ""}
                 `}
               >
                 <input {...getInputProps()} />
                 <div className="flex flex-col items-center justify-center text-center">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-100">
-                    <Upload className="h-6 w-6 text-purple-600" />
+                  <div
+                    className={`flex h-12 w-12 items-center justify-center rounded-full ${
+                      isDragReject ? "bg-red-100" : isDragAccept ? "bg-green-100" : "bg-purple-100"
+                    }`}
+                  >
+                    {isDragReject ? (
+                      <Ban className="h-6 w-6 text-red-600" />
+                    ) : isDragAccept ? (
+                      <CheckCircle2 className="h-6 w-6 text-green-600" />
+                    ) : (
+                      <Upload className="h-6 w-6 text-purple-600" />
+                    )}
                   </div>
                   <div className="mt-4 text-sm font-medium">
-                    {isDragActive ? "Drop the files here..." : "Drag and drop files here, or click to select files"}
+                    {isDragReject
+                      ? "Some files are not allowed"
+                      : isDragAccept
+                        ? "Drop files to upload"
+                        : isDragActive
+                          ? "Drop the files here..."
+                          : "Drag and drop files here, or click to select files"}
                   </div>
-                  <div className="mt-2 text-xs text-muted-foreground">Supports PDF, DOCX, JPG, PNG (max 10MB)</div>
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    {formatFileSize(MIN_FILE_SIZE)} - {formatFileSize(MAX_FILE_SIZE)} per file
+                  </div>
                 </div>
 
                 {files.length > 0 && (
@@ -719,29 +1087,55 @@ export function AIDocumentUpload() {
                     {files.map((file, index) => (
                       <div
                         key={index}
-                        className="flex items-center justify-between rounded-md border border-purple-100 bg-purple-50 p-2"
+                        className={`flex items-center justify-between rounded-md border p-2 ${
+                          file.errors.length > 0
+                            ? "border-red-200 bg-red-50"
+                            : file.warnings.length > 0
+                              ? "border-amber-100 bg-amber-50"
+                              : "border-purple-100 bg-purple-50"
+                        }`}
                       >
                         <div className="flex items-center space-x-2">
-                          <FileText className="h-5 w-5 text-purple-600" />
+                          {file.errors.length > 0 ? (
+                            <FileWarning className="h-5 w-5 text-red-600" />
+                          ) : file.warnings.length > 0 ? (
+                            <AlertTriangle className="h-5 w-5 text-amber-600" />
+                          ) : (
+                            getFileIcon(file.file.name)
+                          )}
                           <div>
-                            <div className="text-sm font-medium">{file.name}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {(file.size / 1024 / 1024).toFixed(2)} MB
-                            </div>
+                            <div className="text-sm font-medium">{file.file.name}</div>
+                            <div className="text-xs text-muted-foreground">{formatFileSize(file.file.size)}</div>
+                            {(file.errors.length > 0 || file.warnings.length > 0) && (
+                              <div className={`text-xs ${file.errors.length > 0 ? "text-red-600" : "text-amber-600"}`}>
+                                {file.errors.length > 0
+                                  ? `${file.errors.length} error${file.errors.length > 1 ? "s" : ""}`
+                                  : `${file.warnings.length} warning${file.warnings.length > 1 ? "s" : ""}`}
+                              </div>
+                            )}
                           </div>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 text-muted-foreground"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            removeFile(index)
-                          }}
-                        >
-                          <X className="h-4 w-4" />
-                          <span className="sr-only">Remove</span>
-                        </Button>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0 text-muted-foreground"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  removeFile(index)
+                                }}
+                              >
+                                <X className="h-4 w-4" />
+                                <span className="sr-only">Remove</span>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Remove file</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </div>
                     ))}
                   </div>
@@ -779,7 +1173,14 @@ export function AIDocumentUpload() {
             <div className="flex justify-end">
               <Button
                 onClick={handleUpload}
-                disabled={files.length === 0 || !selectedTransaction || !documentType || isUploading || isProcessing}
+                disabled={
+                  files.length === 0 ||
+                  !selectedTransaction ||
+                  !documentType ||
+                  isUploading ||
+                  isProcessing ||
+                  hasFileErrors
+                }
                 className="bg-gradient-to-r from-purple-600 to-pink-500 hover:opacity-90 transition-opacity"
               >
                 {isUploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

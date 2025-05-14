@@ -28,59 +28,252 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
-import { useGmail } from "@/contexts/gmail-context"
 import { useToast } from "@/components/ui/use-toast"
-import type { GmailCredentials } from "@/types/gmail"
+import { useGmailAuth } from "@/hooks/use-gmail-auth"
 
-export function GmailIntegration() {
+export function GmailIntegrationSettings() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
-  const gmail = useGmail()
   const [activeTab, setActiveTab] = useState("connection")
+  const [isLoading, setIsLoading] = useState(false)
+  const [isConnected, setIsConnected] = useState(false)
+  const [userEmail, setUserEmail] = useState("")
 
-  // Handle OAuth callback
+  // Gmail auth hook
+  const { initiateAuth, disconnectGmail, isAuthenticated, checkAuthStatus } = useGmailAuth()
+
+  // Settings state
+  const [settings, setSettings] = useState({
+    signature: {
+      enabled: true,
+      content: "<p>Your Name</p><p>Real Estate Agent</p><p>your.email@gmail.com</p><p>+1 (555) 123-4567</p>",
+    },
+    sending: {
+      defaultSenderName: "",
+      replyToAddress: "",
+      ccBehavior: "none",
+      sendBehavior: "immediate",
+      attachmentLimit: "25",
+    },
+    receiving: {
+      syncEnabled: true,
+      syncFrequency: "5",
+      syncLabels: "all",
+      syncPeriod: "30",
+      autoCategorize: true,
+      autoLink: true,
+      extractAttachments: true,
+    },
+    notifications: {
+      enabled: true,
+      sound: "chime",
+      filters: {
+        all: false,
+        important: true,
+        transactions: true,
+        leads: true,
+      },
+      previewType: "subject-sender",
+      browserNotifications: true,
+      mobileNotifications: false,
+    },
+    security: {
+      dataAccessLevel: "read_write",
+      retentionPeriod: "30_days",
+      privacyMode: "standard_extraction",
+    },
+  })
+
+  // Check for OAuth callback parameters
   useEffect(() => {
-    const success = searchParams.get("success")
+    const code = searchParams.get("code")
     const error = searchParams.get("error")
-    const credentialsParam = searchParams.get("credentials")
 
-    if (success === "true" && credentialsParam) {
-      try {
-        const credentials = JSON.parse(credentialsParam) as GmailCredentials
-
-        // Store credentials in localStorage
-        localStorage.setItem("gmail_credentials", JSON.stringify(credentials))
-
-        // Show success toast
-        toast({
-          title: "Gmail Connected",
-          description: "Your Gmail account has been successfully connected.",
-          variant: "default",
-        })
-
-        // Clean up URL
-        router.replace("/settings/integrations/gmail")
-      } catch (error) {
-        console.error("Error parsing credentials:", error)
-
-        toast({
-          title: "Connection Error",
-          description: "Failed to connect Gmail account. Please try again.",
-          variant: "destructive",
-        })
-      }
+    if (code) {
+      handleOAuthCallback(code)
     } else if (error) {
       toast({
-        title: "Connection Error",
+        title: "Authentication Error",
         description: decodeURIComponent(error),
         variant: "destructive",
+      })
+      router.replace("/settings/integrations/gmail")
+    }
+
+    // Check if already authenticated
+    checkAuthenticationStatus()
+  }, [searchParams])
+
+  // Check authentication status
+  const checkAuthenticationStatus = async () => {
+    const status = await checkAuthStatus()
+    setIsConnected(status.isAuthenticated)
+    if (status.isAuthenticated && status.userEmail) {
+      setUserEmail(status.userEmail)
+
+      // Load user settings if available
+      loadUserSettings()
+    }
+  }
+
+  // Handle OAuth callback
+  const handleOAuthCallback = async (code: string) => {
+    setIsLoading(true)
+
+    try {
+      const response = await fetch("/api/gmail/auth/callback", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ code }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to authenticate with Gmail")
+      }
+
+      setIsConnected(true)
+      setUserEmail(data.email)
+
+      toast({
+        title: "Gmail Connected",
+        description: "Your Gmail account has been successfully connected to DealMate.",
+        variant: "default",
       })
 
       // Clean up URL
       router.replace("/settings/integrations/gmail")
+    } catch (error) {
+      console.error("Authentication error:", error)
+      toast({
+        title: "Connection Error",
+        description: error instanceof Error ? error.message : "Failed to connect Gmail account",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
     }
-  }, [searchParams, router, toast])
+  }
+
+  // Load user settings
+  const loadUserSettings = async () => {
+    try {
+      const response = await fetch("/api/gmail/settings")
+
+      if (response.ok) {
+        const data = await response.json()
+        setSettings(data)
+      }
+    } catch (error) {
+      console.error("Error loading settings:", error)
+    }
+  }
+
+  // Save settings
+  const saveSettings = async () => {
+    setIsLoading(true)
+
+    try {
+      const response = await fetch("/api/gmail/settings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(settings),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to save settings")
+      }
+
+      toast({
+        title: "Settings Saved",
+        description: "Your Gmail integration settings have been saved.",
+        variant: "default",
+      })
+    } catch (error) {
+      console.error("Error saving settings:", error)
+      toast({
+        title: "Error",
+        description: "Failed to save settings. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Connect Gmail
+  const handleConnect = async () => {
+    setIsLoading(true)
+    try {
+      await initiateAuth()
+    } catch (error) {
+      console.error("Error initiating auth:", error)
+      toast({
+        title: "Connection Error",
+        description: "Failed to initiate Gmail connection. Please try again.",
+        variant: "destructive",
+      })
+      setIsLoading(false)
+    }
+  }
+
+  // Disconnect Gmail
+  const handleDisconnect = async () => {
+    setIsLoading(true)
+
+    try {
+      await disconnectGmail()
+
+      setIsConnected(false)
+      setUserEmail("")
+
+      toast({
+        title: "Gmail Disconnected",
+        description: "Your Gmail account has been disconnected from DealMate.",
+        variant: "default",
+      })
+    } catch (error) {
+      console.error("Error disconnecting:", error)
+      toast({
+        title: "Error",
+        description: "Failed to disconnect Gmail account. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Update settings
+  const updateSettings = (section, key, value) => {
+    setSettings((prev) => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        [key]: value,
+      },
+    }))
+  }
+
+  // Update nested settings
+  const updateNestedSettings = (section, nestedKey, key, value) => {
+    setSettings((prev) => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        [nestedKey]: {
+          ...prev[section][nestedKey],
+          [key]: value,
+        },
+      },
+    }))
+  }
 
   return (
     <div className="space-y-6">
@@ -102,7 +295,7 @@ export function GmailIntegration() {
               <CardDescription>Connect your Gmail account to enable email integration</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {gmail.isConnected ? (
+              {isConnected ? (
                 <div className="space-y-4">
                   <Alert className="bg-green-50 border-green-200">
                     <Check className="h-5 w-5 text-green-600" />
@@ -117,7 +310,7 @@ export function GmailIntegration() {
                           <Mail className="h-5 w-5 text-red-600" />
                         </div>
                         <div>
-                          <h3 className="font-medium">{gmail.profile?.email}</h3>
+                          <h3 className="font-medium">{userEmail}</h3>
                           <p className="text-sm text-muted-foreground">Connected account</p>
                         </div>
                       </div>
@@ -237,12 +430,12 @@ export function GmailIntegration() {
 
                     <div className="pt-2">
                       <Button
-                        onClick={gmail.connect}
-                        disabled={gmail.isLoading}
+                        onClick={handleConnect}
+                        disabled={isLoading}
                         className="w-full bg-gradient-to-r from-purple-600 to-pink-500 hover:opacity-90 transition-opacity"
                       >
-                        {gmail.isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        {gmail.isLoading ? "Connecting..." : "Connect Gmail Account"}
+                        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {isLoading ? "Connecting..." : "Connect Gmail Account"}
                       </Button>
                     </div>
                   </div>
@@ -250,18 +443,18 @@ export function GmailIntegration() {
               )}
             </CardContent>
             <CardFooter className="flex justify-between border-t pt-6">
-              {gmail.isConnected && (
+              {isConnected && (
                 <Button
                   variant="outline"
-                  onClick={gmail.disconnect}
-                  disabled={gmail.isLoading}
+                  onClick={handleDisconnect}
+                  disabled={isLoading}
                   className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
                 >
-                  {gmail.isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Disconnect Gmail
                 </Button>
               )}
-              <Button onClick={() => setActiveTab("sending")} className="ml-auto gap-1" disabled={!gmail.isConnected}>
+              <Button onClick={() => setActiveTab("sending")} className="ml-auto gap-1" disabled={!isConnected}>
                 Next: Sending Emails
                 <ChevronRight className="h-4 w-4" />
               </Button>
@@ -285,16 +478,18 @@ export function GmailIntegration() {
                     Automatically add your signature to outgoing emails
                   </span>
                 </Label>
-                <Switch id="signature-enabled" defaultChecked />
+                <Switch
+                  id="signature-enabled"
+                  checked={settings.signature.enabled}
+                  onCheckedChange={(checked) => updateSettings("signature", "enabled", checked)}
+                  disabled={!isConnected}
+                />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="signature-editor">Email Signature</Label>
                 <div className="border rounded-md p-4 min-h-[100px]">
-                  <p>Bruce Wayne</p>
-                  <p>Luxury Real Estate Agent</p>
-                  <p>brucewayne.luxrealty@gmail.com</p>
-                  <p>+1 (555) 123-4567</p>
+                  <div dangerouslySetInnerHTML={{ __html: settings.signature.content }} />
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Click to edit your email signature. HTML formatting is supported.
@@ -303,7 +498,13 @@ export function GmailIntegration() {
 
               <div className="space-y-2">
                 <Label htmlFor="default-sender">Default Sender Name</Label>
-                <Input id="default-sender" defaultValue="Bruce Wayne" />
+                <Input
+                  id="default-sender"
+                  value={settings.sending.defaultSenderName}
+                  onChange={(e) => updateSettings("sending", "defaultSenderName", e.target.value)}
+                  placeholder="Your Name"
+                  disabled={!isConnected}
+                />
                 <p className="text-xs text-muted-foreground">
                   This name will appear as the sender for emails sent from DealMate.
                 </p>
@@ -311,13 +512,23 @@ export function GmailIntegration() {
 
               <div className="space-y-2">
                 <Label htmlFor="reply-to">Reply-To Address</Label>
-                <Input id="reply-to" defaultValue="brucewayne.luxrealty@gmail.com" />
+                <Input
+                  id="reply-to"
+                  value={settings.sending.replyToAddress}
+                  onChange={(e) => updateSettings("sending", "replyToAddress", e.target.value)}
+                  placeholder="your.email@gmail.com"
+                  disabled={!isConnected}
+                />
                 <p className="text-xs text-muted-foreground">Replies to your emails will be sent to this address.</p>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="cc-behavior">Default CC Behavior</Label>
-                <Select defaultValue="none">
+                <Select
+                  value={settings.sending.ccBehavior}
+                  onValueChange={(value) => updateSettings("sending", "ccBehavior", value)}
+                  disabled={!isConnected}
+                >
                   <SelectTrigger id="cc-behavior">
                     <SelectValue placeholder="Select behavior" />
                   </SelectTrigger>
@@ -332,7 +543,11 @@ export function GmailIntegration() {
 
               <div className="space-y-2">
                 <Label htmlFor="send-behavior">Send Behavior</Label>
-                <Select defaultValue="immediate">
+                <Select
+                  value={settings.sending.sendBehavior}
+                  onValueChange={(value) => updateSettings("sending", "sendBehavior", value)}
+                  disabled={!isConnected}
+                >
                   <SelectTrigger id="send-behavior">
                     <SelectValue placeholder="Select behavior" />
                   </SelectTrigger>
@@ -349,7 +564,11 @@ export function GmailIntegration() {
 
               <div className="space-y-2">
                 <Label htmlFor="attachment-limit">Attachment Size Limit</Label>
-                <Select defaultValue="25">
+                <Select
+                  value={settings.sending.attachmentLimit}
+                  onValueChange={(value) => updateSettings("sending", "attachmentLimit", value)}
+                  disabled={!isConnected}
+                >
                   <SelectTrigger id="attachment-limit">
                     <SelectValue placeholder="Select limit" />
                   </SelectTrigger>
@@ -365,10 +584,10 @@ export function GmailIntegration() {
               </div>
             </CardContent>
             <CardFooter className="flex justify-between border-t pt-6">
-              <Button variant="outline" onClick={() => setActiveTab("connection")}>
+              <Button variant="outline" onClick={() => setActiveTab("connection")} disabled={!isConnected}>
                 Back
               </Button>
-              <Button onClick={() => setActiveTab("receiving")} className="gap-1">
+              <Button onClick={() => setActiveTab("receiving")} className="gap-1" disabled={!isConnected}>
                 Next: Receiving Emails
                 <ChevronRight className="h-4 w-4" />
               </Button>
@@ -392,12 +611,21 @@ export function GmailIntegration() {
                     Automatically sync emails from Gmail to DealMate
                   </span>
                 </Label>
-                <Switch id="sync-enabled" defaultChecked />
+                <Switch
+                  id="sync-enabled"
+                  checked={settings.receiving.syncEnabled}
+                  onCheckedChange={(checked) => updateSettings("receiving", "syncEnabled", checked)}
+                  disabled={!isConnected}
+                />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="sync-frequency">Sync Frequency</Label>
-                <Select defaultValue="5">
+                <Select
+                  value={settings.receiving.syncFrequency}
+                  onValueChange={(value) => updateSettings("receiving", "syncFrequency", value)}
+                  disabled={!isConnected || !settings.receiving.syncEnabled}
+                >
                   <SelectTrigger id="sync-frequency">
                     <SelectValue placeholder="Select frequency" />
                   </SelectTrigger>
@@ -414,7 +642,11 @@ export function GmailIntegration() {
 
               <div className="space-y-2">
                 <Label htmlFor="sync-labels">Sync Labels</Label>
-                <Select defaultValue="all">
+                <Select
+                  value={settings.receiving.syncLabels}
+                  onValueChange={(value) => updateSettings("receiving", "syncLabels", value)}
+                  disabled={!isConnected || !settings.receiving.syncEnabled}
+                >
                   <SelectTrigger id="sync-labels">
                     <SelectValue placeholder="Select labels" />
                   </SelectTrigger>
@@ -429,7 +661,11 @@ export function GmailIntegration() {
 
               <div className="space-y-2">
                 <Label htmlFor="sync-period">Sync Period</Label>
-                <Select defaultValue="30">
+                <Select
+                  value={settings.receiving.syncPeriod}
+                  onValueChange={(value) => updateSettings("receiving", "syncPeriod", value)}
+                  disabled={!isConnected || !settings.receiving.syncEnabled}
+                >
                   <SelectTrigger id="sync-period">
                     <SelectValue placeholder="Select period" />
                   </SelectTrigger>
@@ -450,7 +686,12 @@ export function GmailIntegration() {
                     Automatically categorize emails as transactions, leads, etc.
                   </span>
                 </Label>
-                <Switch id="auto-categorize" defaultChecked />
+                <Switch
+                  id="auto-categorize"
+                  checked={settings.receiving.autoCategorize}
+                  onCheckedChange={(checked) => updateSettings("receiving", "autoCategorize", checked)}
+                  disabled={!isConnected || !settings.receiving.syncEnabled}
+                />
               </div>
 
               <div className="flex items-center justify-between space-x-2">
@@ -460,7 +701,12 @@ export function GmailIntegration() {
                     Automatically link emails to relevant transactions
                   </span>
                 </Label>
-                <Switch id="auto-link" defaultChecked />
+                <Switch
+                  id="auto-link"
+                  checked={settings.receiving.autoLink}
+                  onCheckedChange={(checked) => updateSettings("receiving", "autoLink", checked)}
+                  disabled={!isConnected || !settings.receiving.syncEnabled}
+                />
               </div>
 
               <div className="flex items-center justify-between space-x-2">
@@ -470,14 +716,19 @@ export function GmailIntegration() {
                     Automatically extract and save attachments from emails
                   </span>
                 </Label>
-                <Switch id="extract-attachments" defaultChecked />
+                <Switch
+                  id="extract-attachments"
+                  checked={settings.receiving.extractAttachments}
+                  onCheckedChange={(checked) => updateSettings("receiving", "extractAttachments", checked)}
+                  disabled={!isConnected || !settings.receiving.syncEnabled}
+                />
               </div>
             </CardContent>
             <CardFooter className="flex justify-between border-t pt-6">
-              <Button variant="outline" onClick={() => setActiveTab("sending")}>
+              <Button variant="outline" onClick={() => setActiveTab("sending")} disabled={!isConnected}>
                 Back
               </Button>
-              <Button onClick={() => setActiveTab("notifications")} className="gap-1">
+              <Button onClick={() => setActiveTab("notifications")} className="gap-1" disabled={!isConnected}>
                 Next: Notifications
                 <ChevronRight className="h-4 w-4" />
               </Button>
@@ -501,12 +752,21 @@ export function GmailIntegration() {
                     Receive notifications for new emails
                   </span>
                 </Label>
-                <Switch id="notifications-enabled" defaultChecked />
+                <Switch
+                  id="notifications-enabled"
+                  checked={settings.notifications.enabled}
+                  onCheckedChange={(checked) => updateSettings("notifications", "enabled", checked)}
+                  disabled={!isConnected}
+                />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="notification-sound">Notification Sound</Label>
-                <Select defaultValue="chime">
+                <Select
+                  value={settings.notifications.sound}
+                  onValueChange={(value) => updateSettings("notifications", "sound", value)}
+                  disabled={!isConnected || !settings.notifications.enabled}
+                >
                   <SelectTrigger id="notification-sound">
                     <SelectValue placeholder="Select sound" />
                   </SelectTrigger>
@@ -526,32 +786,60 @@ export function GmailIntegration() {
                     <Label htmlFor="notify-all" className="cursor-pointer">
                       All emails
                     </Label>
-                    <Switch id="notify-all" />
+                    <Switch
+                      id="notify-all"
+                      checked={settings.notifications.filters.all}
+                      onCheckedChange={(checked) => updateNestedSettings("notifications", "filters", "all", checked)}
+                      disabled={!isConnected || !settings.notifications.enabled}
+                    />
                   </div>
                   <div className="flex items-center justify-between">
                     <Label htmlFor="notify-important" className="cursor-pointer">
                       Important emails only
                     </Label>
-                    <Switch id="notify-important" defaultChecked />
+                    <Switch
+                      id="notify-important"
+                      checked={settings.notifications.filters.important}
+                      onCheckedChange={(checked) =>
+                        updateNestedSettings("notifications", "filters", "important", checked)
+                      }
+                      disabled={!isConnected || !settings.notifications.enabled}
+                    />
                   </div>
                   <div className="flex items-center justify-between">
                     <Label htmlFor="notify-transactions" className="cursor-pointer">
                       Transaction-related emails
                     </Label>
-                    <Switch id="notify-transactions" defaultChecked />
+                    <Switch
+                      id="notify-transactions"
+                      checked={settings.notifications.filters.transactions}
+                      onCheckedChange={(checked) =>
+                        updateNestedSettings("notifications", "filters", "transactions", checked)
+                      }
+                      disabled={!isConnected || !settings.notifications.enabled}
+                    />
                   </div>
                   <div className="flex items-center justify-between">
                     <Label htmlFor="notify-leads" className="cursor-pointer">
                       Lead-related emails
                     </Label>
-                    <Switch id="notify-leads" defaultChecked />
+                    <Switch
+                      id="notify-leads"
+                      checked={settings.notifications.filters.leads}
+                      onCheckedChange={(checked) => updateNestedSettings("notifications", "filters", "leads", checked)}
+                      disabled={!isConnected || !settings.notifications.enabled}
+                    />
                   </div>
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="notification-preview">Notification Preview</Label>
-                <Select defaultValue="subject-sender">
+                <Select
+                  value={settings.notifications.previewType}
+                  onValueChange={(value) => updateSettings("notifications", "previewType", value)}
+                  disabled={!isConnected || !settings.notifications.enabled}
+                >
                   <SelectTrigger id="notification-preview">
                     <SelectValue placeholder="Select preview" />
                   </SelectTrigger>
@@ -571,7 +859,12 @@ export function GmailIntegration() {
                     Show browser notifications for new emails
                   </span>
                 </Label>
-                <Switch id="browser-notifications" defaultChecked />
+                <Switch
+                  id="browser-notifications"
+                  checked={settings.notifications.browserNotifications}
+                  onCheckedChange={(checked) => updateSettings("notifications", "browserNotifications", checked)}
+                  disabled={!isConnected || !settings.notifications.enabled}
+                />
               </div>
 
               <div className="flex items-center justify-between space-x-2">
@@ -581,14 +874,19 @@ export function GmailIntegration() {
                     Send notifications to your mobile device
                   </span>
                 </Label>
-                <Switch id="mobile-notifications" />
+                <Switch
+                  id="mobile-notifications"
+                  checked={settings.notifications.mobileNotifications}
+                  onCheckedChange={(checked) => updateSettings("notifications", "mobileNotifications", checked)}
+                  disabled={!isConnected || !settings.notifications.enabled}
+                />
               </div>
             </CardContent>
             <CardFooter className="flex justify-between border-t pt-6">
-              <Button variant="outline" onClick={() => setActiveTab("receiving")}>
+              <Button variant="outline" onClick={() => setActiveTab("receiving")} disabled={!isConnected}>
                 Back
               </Button>
-              <Button onClick={() => setActiveTab("security")} className="gap-1">
+              <Button onClick={() => setActiveTab("security")} className="gap-1" disabled={!isConnected}>
                 Next: Security
                 <ChevronRight className="h-4 w-4" />
               </Button>
@@ -608,7 +906,11 @@ export function GmailIntegration() {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="data-access">Data Access Level</Label>
-                  <Select defaultValue="read_write">
+                  <Select
+                    value={settings.security.dataAccessLevel}
+                    onValueChange={(value) => updateSettings("security", "dataAccessLevel", value)}
+                    disabled={!isConnected}
+                  >
                     <SelectTrigger id="data-access">
                       <SelectValue placeholder="Select access level" />
                     </SelectTrigger>
@@ -625,7 +927,11 @@ export function GmailIntegration() {
 
                 <div className="space-y-2">
                   <Label htmlFor="retention-period">Data Retention Period</Label>
-                  <Select defaultValue="30_days">
+                  <Select
+                    value={settings.security.retentionPeriod}
+                    onValueChange={(value) => updateSettings("security", "retentionPeriod", value)}
+                    disabled={!isConnected}
+                  >
                     <SelectTrigger id="retention-period">
                       <SelectValue placeholder="Select retention period" />
                     </SelectTrigger>
@@ -643,7 +949,11 @@ export function GmailIntegration() {
 
                 <div className="space-y-2">
                   <Label htmlFor="privacy-mode">Privacy Mode</Label>
-                  <Select defaultValue="standard_extraction">
+                  <Select
+                    value={settings.security.privacyMode}
+                    onValueChange={(value) => updateSettings("security", "privacyMode", value)}
+                    disabled={!isConnected}
+                  >
                     <SelectTrigger id="privacy-mode">
                       <SelectValue placeholder="Select privacy mode" />
                     </SelectTrigger>
@@ -690,25 +1000,33 @@ export function GmailIntegration() {
                   <Button
                     variant="outline"
                     className="w-full border-red-200 text-red-600 hover:bg-red-100"
-                    onClick={gmail.disconnect}
+                    onClick={handleDisconnect}
+                    disabled={!isConnected || isLoading}
                   >
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Disconnect Gmail Integration
                   </Button>
 
-                  <Button variant="outline" className="w-full border-red-200 text-red-600 hover:bg-red-100">
+                  <Button
+                    variant="outline"
+                    className="w-full border-red-200 text-red-600 hover:bg-red-100"
+                    disabled={!isConnected || isLoading}
+                  >
                     Delete All Extracted Data
                   </Button>
                 </div>
               </div>
             </CardContent>
             <CardFooter className="flex justify-between border-t pt-6">
-              <Button variant="outline" onClick={() => setActiveTab("notifications")}>
+              <Button variant="outline" onClick={() => setActiveTab("notifications")} disabled={!isConnected}>
                 Back
               </Button>
               <Button
-                onClick={() => router.push("/settings/integrations")}
+                onClick={saveSettings}
+                disabled={!isConnected || isLoading}
                 className="bg-gradient-to-r from-purple-600 to-pink-500 hover:opacity-90 transition-opacity"
               >
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Save Configuration
               </Button>
             </CardFooter>
