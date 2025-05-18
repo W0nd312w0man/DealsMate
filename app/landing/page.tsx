@@ -1,20 +1,52 @@
 "use client"
-
-import { useState } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ArrowRight, CheckCircle, ClipboardCheck, MessageSquare, ChevronRight } from "lucide-react"
-import { SignInDialog } from "@/components/landing/sign-in-dialog"
+import { createClient } from "@supabase/supabase-js"
+
+// Initialize Supabase client with placeholders for environment variables
+// Replace these placeholders with your actual Supabase URL and anon key
+const supabaseUrl = "https://your-project-ref.supabase.co"
+const supabaseAnonKey = "your-supabase-anon-key"
+
+// Only create the client on the client side
+let supabase: ReturnType<typeof createClient> | null = null
 
 export default function LandingPage() {
-  const [signInDialogOpen, setSignInDialogOpen] = useState(false)
+  const router = useRouter()
+
+  // Function to handle Google OAuth sign-in
+  const handleGoogleSignIn = async () => {
+    try {
+      // Initialize Supabase client only on the client side
+      if (typeof window !== "undefined" && !supabase) {
+        supabase = createClient(supabaseUrl, supabaseAnonKey)
+      }
+
+      if (!supabase) {
+        console.error("Supabase client not initialized")
+        return
+      }
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
+
+      if (error) {
+        console.error("Error signing in with Google:", error.message)
+      }
+    } catch (error) {
+      console.error("Unexpected error during sign in:", error)
+    }
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-purple-950 via-purple-900 to-purple-800 text-white overflow-hidden">
-      {/* Sign In Dialog */}
-      <SignInDialog open={signInDialogOpen} onOpenChange={setSignInDialogOpen} />
-
       {/* Header */}
       <header className="w-full border-b border-white/10 bg-purple-950/70 backdrop-blur-md sticky top-0 z-50">
         <div className="container flex h-16 items-center justify-between py-4">
@@ -33,11 +65,27 @@ export default function LandingPage() {
               Benefits
             </Link>
             <Button
+              variant="outline"
               size="sm"
-              className="bg-purple-500 hover:bg-purple-400 text-white transition-colors"
-              onClick={() => setSignInDialogOpen(true)}
+              className="border-purple-400 text-purple-400 hover:bg-purple-800 hover:text-white"
+              onClick={handleGoogleSignIn}
             >
-              Sign In
+              <svg
+                className="mr-2 h-4 w-4"
+                aria-hidden="true"
+                focusable="false"
+                data-prefix="fab"
+                data-icon="google"
+                role="img"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 488 512"
+              >
+                <path
+                  fill="currentColor"
+                  d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"
+                ></path>
+              </svg>
+              Sign in with Google
             </Button>
           </div>
 

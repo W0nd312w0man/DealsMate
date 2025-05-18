@@ -1,38 +1,31 @@
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
-import { type NextRequest, NextResponse } from "next/server"
+import { createClient } from "@supabase/supabase-js"
+import { NextResponse } from "next/server"
 
-export const dynamic = "force-dynamic"
+// Initialize Supabase client with placeholders for environment variables
+// Replace these placeholders with your actual Supabase URL and anon key
+const supabaseUrl = "https://ylpfxtdzizqrzhtxwelk.supabase.co"
+const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlscGZ4dGR6aXpxcnpodHh3ZWxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNjI1MDgsImV4cCI6MjA2MjgzODUwOH0.Gv623QSJLOZwYrPBhyOkw9Vk-kzrH4PI6qn125gD1Tw"
 
-export async function GET(request: NextRequest) {
-  try {
-    // Get the code and destination from the URL
-    const requestUrl = new URL(request.url)
-    const code = requestUrl.searchParams.get("code")
+export async function GET(request: Request) {
+  const requestUrl = new URL(request.url)
+  const code = requestUrl.searchParams.get("code")
 
-    // Get the destination from the URL or default to dashboard
-    const destination = requestUrl.searchParams.get("destination") || "/dashboard"
+  if (code) {
+    const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-    // If there's no code, redirect to the landing page
-    if (!code) {
-      console.error("No code provided in callback")
-      return NextResponse.redirect(new URL("/landing", request.url))
+    try {
+      // Exchange the code for a session
+      await supabase.auth.exchangeCodeForSession(code)
+
+      // Redirect to dashboard after successful authentication
+      return NextResponse.redirect(new URL("/dashboard", requestUrl.origin))
+    } catch (error) {
+      console.error("Error exchanging code for session:", error)
+      // Redirect to landing page with error parameter
+      return NextResponse.redirect(new URL("/?auth=error", requestUrl.origin))
     }
-
-    // Create a Supabase client using the auth-helpers-nextjs
-    const cookieStore = cookies()
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
-
-    // Exchange the code for a session
-    // This will automatically set the auth cookie
-    await supabase.auth.exchangeCodeForSession(code)
-
-    console.log("Successfully exchanged code for session, redirecting to:", destination)
-
-    // Redirect to the destination (dashboard by default)
-    return NextResponse.redirect(new URL(destination, request.url))
-  } catch (error) {
-    console.error("Error in auth callback:", error)
-    return NextResponse.redirect(new URL("/landing?error=Authentication failed", request.url))
   }
+
+  // If there's no code, redirect back to the landing page
+  return NextResponse.redirect(new URL("/", requestUrl.origin))
 }
