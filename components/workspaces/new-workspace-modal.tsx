@@ -13,6 +13,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Card, CardContent } from "@/components/ui/card"
 import { AlertCircle, ArrowLeft, Building, CheckCircle, Home, Loader2, MapPin, User, Users } from "lucide-react"
 import { useWorkspaceCreation } from "@/hooks/use-workspace-creation"
+import { createClient } from "@supabase/supabase-js"
 
 type NamingType = "property" | "client" | ""
 type ClientType = "Buyer" | "Seller" | ""
@@ -115,8 +116,33 @@ export function NewWorkspaceModal({ open, onOpenChange }: NewWorkspaceModalProps
     setErrors({})
 
     try {
-      // Simulate API call to create workspace
-      await new Promise((resolve) => setTimeout(resolve, 800))
+      // Create Supabase client
+      const supabaseUrl = "https://ylpfxtdzizqrzhtxwelk.supabase.co"
+      const supabaseAnonKey =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlscGZ4dGR6aXpxcnpodHh3ZWxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNjI1MDgsImV4cCI6MjA2MjgzODUwOH0.Gv623QSJLOZwYrPBhyOkw9Vk-kzrH4PI6qn125gD1Tw"
+      const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+      // Get current user
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      // Insert workspace into Supabase
+      const { data, error } = await supabase
+        .from("workspaces")
+        .insert([
+          {
+            property_address: propertyAddress,
+            name: propertyAddress,
+            created_by: user?.id || "anonymous",
+            status: "active",
+            workspace_type: "property",
+            created_at: new Date().toISOString(),
+          },
+        ])
+        .select()
+
+      if (error) throw error
 
       // Show success message
       setSuccessMessage(`Workspace "${propertyAddress}" created successfully!`)
@@ -131,6 +157,7 @@ export function NewWorkspaceModal({ open, onOpenChange }: NewWorkspaceModalProps
         })
       }, 1500)
     } catch (error) {
+      console.error("Error creating workspace:", error)
       setErrors({ submit: "Failed to create workspace. Please try again." })
     } finally {
       setIsSubmitting(false)
