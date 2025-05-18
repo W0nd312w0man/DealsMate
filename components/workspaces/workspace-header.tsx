@@ -56,6 +56,56 @@ export function WorkspaceHeader({ workspaceId }: WorkspaceHeaderProps) {
   const [primaryBuyer, setPrimaryBuyer] = useState<string | null>(null)
   const [primarySeller, setPrimarySeller] = useState<string | null>(null)
 
+  const [workspace, setWorkspace] = useState({
+    id: workspaceId,
+    name: "Loading...",
+    address: "",
+    type: "property",
+    status: isArchived ? ("Archived" as TransactionStatus) : ("Active" as TransactionStatus),
+    lastActivity: "",
+    tasks: 0,
+    messages: 0,
+  })
+
+  useEffect(() => {
+    // Fetch workspace data from sessionStorage
+    const fetchWorkspace = () => {
+      try {
+        const storedWorkspaces = sessionStorage.getItem("workspaces")
+        if (storedWorkspaces) {
+          const workspaces = JSON.parse(storedWorkspaces)
+          const foundWorkspace = workspaces.find((w) => w.id === workspaceId)
+
+          if (foundWorkspace) {
+            setWorkspace({
+              ...foundWorkspace,
+              status: isArchived
+                ? ("Archived" as TransactionStatus)
+                : ((foundWorkspace.status || "Active") as TransactionStatus),
+              tasks: foundWorkspace.tasks || 3,
+              messages: foundWorkspace.messages || 5,
+              lastActivity: foundWorkspace.lastActivity || "2 hours ago",
+            })
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching workspace:", error)
+      }
+    }
+
+    fetchWorkspace()
+
+    // Listen for storage events to update the workspace data
+    const handleStorageChange = () => {
+      fetchWorkspace()
+    }
+
+    window.addEventListener("storage", handleStorageChange)
+    return () => {
+      window.removeEventListener("storage", handleStorageChange)
+    }
+  }, [workspaceId, isArchived])
+
   useEffect(() => {
     const buyer = workspaceParties.getPrimaryParty(workspaceId, "Buyer")
     const seller = workspaceParties.getPrimaryParty(workspaceId, "Seller")
@@ -68,18 +118,6 @@ export function WorkspaceHeader({ workspaceId }: WorkspaceHeaderProps) {
       setPrimarySeller(seller.name)
     }
   }, [workspaceId, workspaceParties])
-
-  // Mock data for the workspace
-  const workspace = {
-    id: workspaceId,
-    name: "15614 Yermo Street, Whittier, CA 90603",
-    address: "15614 Yermo Street, Whittier, CA 90603",
-    type: "property",
-    status: isArchived ? ("Archived" as TransactionStatus) : ("Active" as TransactionStatus),
-    lastActivity: "2 hours ago",
-    tasks: 3,
-    messages: 5,
-  }
 
   // Helper function to get client type icon
   const getClientTypeIcon = (type: string) => {

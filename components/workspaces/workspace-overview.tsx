@@ -26,18 +26,22 @@ interface WorkspaceOverviewProps {
   workspaceId: string
 }
 
+// Define a direct party interface for reading from sessionStorage
+interface Party {
+  id: string
+  name: string
+  type: string
+  role?: string
+  email: string
+  phone: string
+  isPrimary?: boolean
+}
+
 export function WorkspaceOverview({ workspaceId }: WorkspaceOverviewProps) {
   const workspaceParties = useWorkspaceParties()
   const [buyers, setBuyers] = useState<WorkspaceParty[]>([])
   const [sellers, setSellers] = useState<WorkspaceParty[]>([])
-
-  useEffect(() => {
-    setBuyers(workspaceParties.getBuyersByWorkspace(workspaceId))
-    setSellers(workspaceParties.getSellersByWorkspace(workspaceId))
-  }, [workspaceId, workspaceParties])
-
-  // Empty workspace structure
-  const workspace = {
+  const [workspace, setWorkspace] = useState({
     id: workspaceId,
     name: "",
     address: "",
@@ -53,7 +57,90 @@ export function WorkspaceOverview({ workspaceId }: WorkspaceOverviewProps) {
     notes: "",
     prequalified: false,
     prequalifiedAmount: "",
-  }
+    parties: [] as Party[],
+  })
+
+  // Load workspace and parties from sessionStorage
+  useEffect(() => {
+    // Get workspace data from sessionStorage
+    const loadWorkspace = () => {
+      try {
+        const workspaces = JSON.parse(sessionStorage.getItem("workspaces") || "[]")
+        const currentWorkspace = workspaces.find((w: any) => w.id === workspaceId)
+        if (currentWorkspace) {
+          setWorkspace(currentWorkspace)
+
+          // Extract buyers and sellers directly from workspace parties
+          if (currentWorkspace.parties && Array.isArray(currentWorkspace.parties)) {
+            const workspaceBuyers = currentWorkspace.parties
+              .filter(
+                (party: Party) =>
+                  party.type === "buyer" ||
+                  party.role === "Buyer" ||
+                  (party.type === "Individual" && party.role === "Buyer"),
+              )
+              .map((party: Party) => ({
+                ...party,
+                type: party.type || "Individual",
+                isPrimary: party.isPrimary || false,
+                email: party.email || "",
+                phone: party.phone || "",
+              }))
+
+            const workspaceSellers = currentWorkspace.parties
+              .filter(
+                (party: Party) =>
+                  party.type === "seller" ||
+                  party.role === "Seller" ||
+                  (party.type === "Individual" && party.role === "Seller"),
+              )
+              .map((party: Party) => ({
+                ...party,
+                type: party.type || "Individual",
+                isPrimary: party.isPrimary || false,
+                email: party.email || "",
+                phone: party.phone || "",
+              }))
+
+            if (workspaceBuyers.length > 0) {
+              setBuyers(workspaceBuyers)
+            } else {
+              // Fallback to useWorkspaceParties hook
+              setBuyers(workspaceParties.getBuyersByWorkspace(workspaceId))
+            }
+
+            if (workspaceSellers.length > 0) {
+              setSellers(workspaceSellers)
+            } else {
+              // Fallback to useWorkspaceParties hook
+              setSellers(workspaceParties.getSellersByWorkspace(workspaceId))
+            }
+          } else {
+            // Fallback to useWorkspaceParties hook
+            setBuyers(workspaceParties.getBuyersByWorkspace(workspaceId))
+            setSellers(workspaceParties.getSellersByWorkspace(workspaceId))
+          }
+        }
+      } catch (error) {
+        console.error("Error loading workspace:", error)
+        // Fallback to useWorkspaceParties hook
+        setBuyers(workspaceParties.getBuyersByWorkspace(workspaceId))
+        setSellers(workspaceParties.getSellersByWorkspace(workspaceId))
+      }
+    }
+
+    loadWorkspace()
+
+    // Listen for storage events to update the workspace data
+    const handleStorageChange = () => {
+      loadWorkspace()
+    }
+
+    window.addEventListener("storage", handleStorageChange)
+    return () => {
+      window.removeEventListener("storage", handleStorageChange)
+    }
+  }, [workspaceId, workspaceParties])
 
   // Empty tasks array
   const upcomingTasks: any[] = []
@@ -101,19 +188,19 @@ export function WorkspaceOverview({ workspaceId }: WorkspaceOverviewProps) {
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div>
                       <div className="text-xs text-muted-foreground">Last Activity</div>
-                      <div>{workspace.lastActivity}</div>
+                      <div>{workspace.lastActivity || "None"}</div>
                     </div>
                     <div>
                       <div className="text-xs text-muted-foreground">Next Follow-up</div>
-                      <div>{workspace.nextFollowUp}</div>
+                      <div>{workspace.nextFollowUp || "None"}</div>
                     </div>
                     <div>
                       <div className="text-xs text-muted-foreground">Open Tasks</div>
-                      <div>{workspace.tasks}</div>
+                      <div>{workspace.tasks || 0}</div>
                     </div>
                     <div>
                       <div className="text-xs text-muted-foreground">Unread Messages</div>
-                      <div>{workspace.messages}</div>
+                      <div>{workspace.messages || 0}</div>
                     </div>
                   </div>
                 </div>
@@ -155,7 +242,7 @@ export function WorkspaceOverview({ workspaceId }: WorkspaceOverviewProps) {
                               <span className="font-medium text-sm">{buyer.name}</span>
                               {buyer.isPrimary && <Badge className="bg-blue-100 text-blue-800 text-xs">Primary</Badge>}
                             </div>
-                            {buyer.type !== "Individual" && (
+                            {buyer.type !== "Individual" && buyer.entityName && (
                               <div className="text-xs text-muted-foreground">
                                 {buyer.entityName} - {buyer.authorizedSignorTitle}
                               </div>
@@ -165,11 +252,11 @@ export function WorkspaceOverview({ workspaceId }: WorkspaceOverviewProps) {
                         <div className="mt-2 grid grid-cols-2 gap-1">
                           <div className="flex items-center gap-1 text-xs">
                             <Mail className="h-3 w-3 text-muted-foreground" />
-                            <span className="truncate">{buyer.email}</span>
+                            <span className="truncate">{"No email"}</span>
                           </div>
                           <div className="flex items-center gap-1 text-xs">
                             <Phone className="h-3 w-3 text-muted-foreground" />
-                            <span>{buyer.phone}</span>
+                            <span>{buyer.phone || "No phone"}</span>
                           </div>
                         </div>
                       </div>
@@ -214,7 +301,7 @@ export function WorkspaceOverview({ workspaceId }: WorkspaceOverviewProps) {
                                 <Badge className="bg-purple-100 text-purple-800 text-xs">Primary</Badge>
                               )}
                             </div>
-                            {seller.type !== "Individual" && (
+                            {seller.type !== "Individual" && seller.entityName && (
                               <div className="text-xs text-muted-foreground">
                                 {seller.entityName} - {seller.authorizedSignorTitle}
                               </div>
@@ -224,11 +311,11 @@ export function WorkspaceOverview({ workspaceId }: WorkspaceOverviewProps) {
                         <div className="mt-2 grid grid-cols-2 gap-1">
                           <div className="flex items-center gap-1 text-xs">
                             <Mail className="h-3 w-3 text-muted-foreground" />
-                            <span className="truncate">{seller.email}</span>
+                            <span className="truncate">{"No email"}</span>
                           </div>
                           <div className="flex items-center gap-1 text-xs">
                             <Phone className="h-3 w-3 text-muted-foreground" />
-                            <span>{seller.phone}</span>
+                            <span>{seller.phone || "No phone"}</span>
                           </div>
                         </div>
                       </div>
@@ -241,7 +328,7 @@ export function WorkspaceOverview({ workspaceId }: WorkspaceOverviewProps) {
             <div className="space-y-2">
               <h3 className="text-sm font-medium text-muted-foreground">Notes</h3>
               <div className="rounded-lg border p-3">
-                <p className="text-sm">{workspace.notes}</p>
+                <p className="text-sm">{workspace.notes || "No notes"}</p>
               </div>
             </div>
 

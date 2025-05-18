@@ -13,7 +13,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Card, CardContent } from "@/components/ui/card"
 import { AlertCircle, ArrowLeft, Building, CheckCircle, Home, Loader2, MapPin, User, Users } from "lucide-react"
 import { useWorkspaceCreation } from "@/hooks/use-workspace-creation"
-import { createClient } from "@supabase/supabase-js"
 
 type NamingType = "property" | "client" | ""
 type ClientType = "Buyer" | "Seller" | ""
@@ -116,51 +115,27 @@ export function NewWorkspaceModal({ open, onOpenChange }: NewWorkspaceModalProps
     setErrors({})
 
     try {
-      // Create Supabase client
-      const supabaseUrl = "https://ylpfxtdzizqrzhtxwelk.supabase.co"
-      const supabaseAnonKey =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlscGZ4dGR6aXpxcnpodHh3ZWxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNjI1MDgsImV4cCI6MjA2MjgzODUwOH0.Gv623QSJLOZwYrPBhyOkw9Vk-kzrH4PI6qn125gD1Tw"
-      const supabase = createClient(supabaseUrl, supabaseAnonKey)
+      // Generate a unique workspace ID
+      const workspaceId = `WS-${Date.now().toString(36)}`
 
-      console.log("Attempting to create workspace:", propertyAddress)
-
-      // Get current user - make this optional to avoid blocking
-      let userId = "anonymous"
-      try {
-        const {
-          data: { user },
-          error: userError,
-        } = await supabase.auth.getUser()
-        if (user && !userError) {
-          userId = user.id
-        }
-      } catch (userError) {
-        console.warn("Could not get user, continuing as anonymous:", userError)
+      // Create workspace object
+      const workspaceData = {
+        id: workspaceId,
+        name: propertyAddress,
+        address: propertyAddress,
+        createdAt: new Date().toISOString(),
+        status: "active",
+        type: "property",
+        parties: [],
       }
 
-      console.log("Using user ID:", userId)
+      // Save to sessionStorage
+      const existingWorkspaces = JSON.parse(sessionStorage.getItem("workspaces") || "[]")
+      existingWorkspaces.push(workspaceData)
+      sessionStorage.setItem("workspaces", JSON.stringify(existingWorkspaces))
 
-      // Insert workspace into Supabase
-      const { data, error } = await supabase
-        .from("workspaces")
-        .insert([
-          {
-            property_address: propertyAddress,
-            name: propertyAddress,
-            created_by: userId,
-            status: "active",
-            workspace_type: "property",
-            created_at: new Date().toISOString(),
-          },
-        ])
-        .select()
-
-      if (error) {
-        console.error("Supabase insert error:", error)
-        throw error
-      }
-
-      console.log("Workspace created successfully:", data)
+      // Simulate API call delay
+      await new Promise((resolve) => setTimeout(resolve, 800))
 
       // Show success message
       setSuccessMessage(`Workspace "${propertyAddress}" created successfully!`)
@@ -175,8 +150,8 @@ export function NewWorkspaceModal({ open, onOpenChange }: NewWorkspaceModalProps
         })
       }, 1500)
     } catch (error) {
+      setErrors({ submit: "Failed to create workspace. Please try again." })
       console.error("Error creating workspace:", error)
-      setErrors({ submit: `Failed to create workspace: ${error instanceof Error ? error.message : String(error)}` })
     } finally {
       setIsSubmitting(false)
     }

@@ -1,98 +1,141 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState } from "react"
+import { BotIcon, ChevronDown, ChevronUp, Lightbulb, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { AlertCircle, ArrowRight, Brain, FileText, Lightbulb, MessageSquare } from "lucide-react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { cn } from "@/lib/utils"
+
+interface TalosInsight {
+  id: string
+  title: string
+  description: string
+  type: "suggestion" | "insight" | "alert"
+  actionText?: string
+  actionUrl?: string
+  dismissed?: boolean
+}
 
 export function TalosInsights() {
-  // Mock data for TALOS insights
-  const insights = [
+  const [expanded, setExpanded] = useState(true)
+  const [insights, setInsights] = useState<TalosInsight[]>([
     {
-      id: 1,
-      type: "workspace_suggestion",
-      icon: Lightbulb,
-      title: "New Workspace Suggestion",
-      description: "Email from Karen Chen contains property address. Create a workspace?",
-      action: "Create Workspace",
-      actionLink: "/workspaces/create?email=123",
+      id: "insight-1",
+      title: "Transaction volume increased by 15% this month",
+      description:
+        "Your transaction volume has increased compared to last month. Consider reviewing your capacity and resources.",
+      type: "insight",
+      actionText: "View Analytics",
+      actionUrl: "/reports",
     },
     {
-      id: 2,
-      type: "stage_transition",
-      icon: ArrowRight,
-      title: "Stage Transition Detected",
-      description: "Michael Johnson's workspace has a signed listing agreement. Move to 'Property Listed'?",
-      action: "Update Stage",
-      actionLink: "/workspaces/WS-1235?transition=true",
+      id: "suggestion-1",
+      title: "Optimize your transaction workflow",
+      description:
+        "Based on your recent activity, you could save 2 hours per transaction by automating document collection.",
+      type: "suggestion",
+      actionText: "Setup Automation",
+      actionUrl: "/settings/automation",
     },
     {
-      id: 3,
-      type: "document_suggestion",
-      icon: FileText,
-      title: "Document Suggestion",
-      description: "Emily Brown's transaction may need a Seller's Disclosure form.",
-      action: "Generate Form",
-      actionLink: "/workspaces/WS-1236/documents/create",
+      id: "alert-1",
+      title: "3 transactions need attention",
+      description: "Three transactions have upcoming deadlines within the next 48 hours that require your attention.",
+      type: "alert",
+      actionText: "View Transactions",
+      actionUrl: "/transactions/filtered?status=attention",
     },
-    {
-      id: 4,
-      type: "communication_reminder",
-      icon: MessageSquare,
-      title: "Follow-up Reminder",
-      description: "No response from Robert Wilson in 5 days. Send a follow-up?",
-      action: "Send Message",
-      actionLink: "/workspaces/WS-1237/communications",
-    },
-  ]
+  ])
+
+  const dismissInsight = (id: string) => {
+    setInsights((prev) => prev.filter((insight) => insight.id !== id))
+  }
+
+  const getIcon = (type: TalosInsight["type"]) => {
+    switch (type) {
+      case "suggestion":
+        return <Lightbulb className="h-5 w-5 text-amber-500" />
+      case "insight":
+        return <BotIcon className="h-5 w-5 text-purple-500" />
+      case "alert":
+        return <BotIcon className="h-5 w-5 text-pink-500" />
+      default:
+        return <BotIcon className="h-5 w-5 text-purple-500" />
+    }
+  }
 
   return (
-    <Card className="shadow-soft overflow-hidden">
-      <div className="h-1 w-full bg-gradient-to-r from-indigo-500 to-cyan-400"></div>
+    <Card>
       <CardHeader className="pb-2">
-        <div className="flex items-center gap-2">
-          <Brain className="h-5 w-5 text-indigo-600" />
-          <CardTitle className="text-xl font-poppins text-purple-700">TALOS Insights</CardTitle>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <BotIcon className="h-5 w-5 text-purple-500" />
+            <CardTitle className="text-lg">TALOS AI Insights</CardTitle>
+          </div>
+          <Button variant="ghost" size="sm" onClick={() => setExpanded(!expanded)}>
+            {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </Button>
         </div>
-        <CardDescription>AI-powered suggestions and insights</CardDescription>
+        <CardDescription>AI-powered insights to help optimize your workflow</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {insights.map((insight) => (
-          <div
-            key={insight.id}
-            className="rounded-lg border p-3 hover:border-indigo-200 hover:bg-indigo-50/30 transition-colors"
-          >
-            <div className="flex items-start gap-3">
-              <div className="rounded-full bg-indigo-100 p-1.5 mt-0.5">
-                <insight.icon className="h-4 w-4 text-indigo-600" />
-              </div>
-              <div className="space-y-1 flex-1">
-                <h3 className="font-medium text-sm">{insight.title}</h3>
-                <p className="text-xs text-muted-foreground">{insight.description}</p>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="mt-2 h-7 text-xs border-indigo-200 text-indigo-700 hover:bg-indigo-100"
-                  asChild
+      {expanded && (
+        <CardContent className="pt-2">
+          {insights.length > 0 ? (
+            <div className="space-y-3">
+              {insights.map((insight) => (
+                <div
+                  key={insight.id}
+                  className={cn(
+                    "relative rounded-md border p-3",
+                    insight.type === "alert"
+                      ? "border-pink-200 bg-pink-50"
+                      : insight.type === "suggestion"
+                        ? "border-amber-200 bg-amber-50"
+                        : "border-purple-200 bg-purple-50",
+                  )}
                 >
-                  <a href={insight.actionLink}>{insight.action}</a>
-                </Button>
-              </div>
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 mt-0.5">{getIcon(insight.type)}</div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium text-sm">{insight.title}</h4>
+                      <p className="text-xs text-muted-foreground mt-1">{insight.description}</p>
+                      {insight.actionText && (
+                        <Button
+                          variant="link"
+                          className={cn(
+                            "h-auto p-0 text-xs font-medium mt-1",
+                            insight.type === "alert"
+                              ? "text-pink-700"
+                              : insight.type === "suggestion"
+                                ? "text-amber-700"
+                                : "text-purple-700",
+                          )}
+                        >
+                          {insight.actionText}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 absolute top-2 right-2 text-muted-foreground opacity-70 hover:opacity-100"
+                    onClick={() => dismissInsight(insight.id)}
+                  >
+                    <X className="h-3 w-3" />
+                    <span className="sr-only">Dismiss</span>
+                  </Button>
+                </div>
+              ))}
             </div>
-          </div>
-        ))}
-
-        {insights.length === 0 && (
-          <div className="rounded-lg border border-dashed p-6 text-center">
-            <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100">
-              <AlertCircle className="h-5 w-5 text-indigo-600" />
+          ) : (
+            <div className="py-6 text-center">
+              <BotIcon className="h-8 w-8 text-muted-foreground/50 mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">No insights available at this time</p>
             </div>
-            <h3 className="mt-3 text-sm font-medium">No insights available</h3>
-            <p className="mt-1 text-xs text-muted-foreground">
-              TALOS will provide insights as it analyzes your communications and workspaces.
-            </p>
-          </div>
-        )}
-      </CardContent>
+          )}
+        </CardContent>
+      )}
     </Card>
   )
 }

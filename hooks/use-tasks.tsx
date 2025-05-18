@@ -5,8 +5,18 @@ import type { Task, TaskOwnerRole, TaskStatus } from "@/types/task"
 import { useToast } from "@/components/ui/use-toast"
 import type { TalosNotification } from "@/components/talos/talos-notifications"
 
-// Function to get tasks - to be implemented with real API
+// Function to get tasks - now reads from sessionStorage
 function getTasks(): Task[] {
+  if (typeof window !== "undefined") {
+    const tasksFromStorage = sessionStorage.getItem("tasks")
+    if (tasksFromStorage) {
+      try {
+        return JSON.parse(tasksFromStorage)
+      } catch (e) {
+        console.error("Error parsing tasks from sessionStorage:", e)
+      }
+    }
+  }
   return []
 }
 
@@ -32,7 +42,7 @@ export function useTasks(options: UseTasksOptions = {}) {
   } = options
 
   const { toast } = useToast()
-  const [tasks, setTasks] = useState<Task[]>([])
+  const [tasks, setTasks] = useState<Task[]>(getTasks())
   const [statusFilter, setStatusFilter] = useState<TaskStatus | "all">(initialStatusFilter)
   const [roleFilters, setRoleFilters] = useState<TaskOwnerRole[]>(
     Array.isArray(initialRoleFilter) ? initialRoleFilter : initialRoleFilter === "all" ? [] : [initialRoleFilter],

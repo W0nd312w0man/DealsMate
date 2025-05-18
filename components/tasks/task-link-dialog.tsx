@@ -11,9 +11,9 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
 import type { Task } from "@/types/task"
+import { Textarea } from "@/components/ui/textarea"
 
 interface TaskLinkDialogProps {
   open: boolean
@@ -26,6 +26,7 @@ export function TaskLinkDialog({ open, onOpenChange, task, onTaskLinked }: TaskL
   const [linkType, setLinkType] = useState<"transaction" | "workspace" | "">("")
   const [selectedLinkId, setSelectedLinkId] = useState("")
   const { toast } = useToast()
+  const [description, setDescription] = useState("")
 
   // Mock data for transactions and workspaces
   const transactions = [
@@ -57,6 +58,7 @@ export function TaskLinkDialog({ open, onOpenChange, task, onTaskLinked }: TaskL
   const resetAndClose = () => {
     setLinkType("")
     setSelectedLinkId("")
+    setDescription("")
     onOpenChange(false)
   }
 
@@ -64,69 +66,67 @@ export function TaskLinkDialog({ open, onOpenChange, task, onTaskLinked }: TaskL
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Link Task</DialogTitle>
-          <DialogDescription>Link this task to a transaction or workspace.</DialogDescription>
+          <DialogTitle>Create Task</DialogTitle>
+          <DialogDescription>Enter a description for your new task.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="link-type" className="text-right">
-              Link Type
-            </Label>
-            <Select onValueChange={(value: "transaction" | "workspace") => setLinkType(value)}>
-              <SelectTrigger className="col-span-3">
-                <SelectValue placeholder="Select link type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="transaction">Transaction</SelectItem>
-                <SelectItem value="workspace">Workspace</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid gap-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              placeholder="Enter task description"
+              className="min-h-[100px]"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
           </div>
-          {linkType === "transaction" && (
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="transaction" className="text-right">
-                Transaction
-              </Label>
-              <Select onValueChange={setSelectedLinkId}>
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select transaction" />
-                </SelectTrigger>
-                <SelectContent>
-                  {transactions.map((tx) => (
-                    <SelectItem key={tx.id} value={tx.id}>
-                      {tx.address}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-          {linkType === "workspace" && (
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="workspace" className="text-right">
-                Workspace
-              </Label>
-              <Select onValueChange={setSelectedLinkId}>
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select workspace" />
-                </SelectTrigger>
-                <SelectContent>
-                  {workspaces.map((ws) => (
-                    <SelectItem key={ws.id} value={ws.id}>
-                      {ws.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={resetAndClose}>
-            Cancel
-          </Button>
-          <Button onClick={handleConfirm} disabled={!linkType || !selectedLinkId}>
-            Link Task
+          <Button
+            type="button"
+            onClick={() => {
+              if (!description.trim()) return
+
+              // Create a new task
+              const newTask = {
+                id: `task-${Date.now()}`,
+                title: description,
+                details: "",
+                priority: "medium",
+                dueDate: "Today, 5:00 PM",
+                isPastDue: false,
+                completed: false,
+                ownerRole: "agent",
+                ownerName: "John Smith",
+                createdBy: "manual",
+              }
+
+              // Get existing tasks from sessionStorage or initialize empty array
+              const existingTasks = JSON.parse(sessionStorage.getItem("tasks") || "[]")
+
+              // Add new task to the array
+              const updatedTasks = [newTask, ...existingTasks]
+
+              // Save back to sessionStorage
+              sessionStorage.setItem("tasks", JSON.stringify(updatedTasks))
+
+              // Show success toast
+              toast({
+                title: "Task Created",
+                description: "Your task has been created successfully.",
+                variant: "default",
+              })
+
+              // Reset and close dialog
+              setDescription("")
+              onOpenChange(false)
+
+              // Force refresh the page to show the new task
+              window.location.reload()
+            }}
+            disabled={!description.trim()}
+          >
+            Create Task
           </Button>
         </DialogFooter>
       </DialogContent>

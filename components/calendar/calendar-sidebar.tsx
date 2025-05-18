@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calendar, CheckSquare, RefreshCw } from "lucide-react"
+import { Calendar, CheckSquare, RefreshCw } from 'lucide-react'
 
 interface CalendarFilters {
   showTasks: boolean
@@ -116,14 +116,14 @@ export function CalendarSidebar({ filters, onFiltersChange, onAddEvent }: Calend
             <div className="space-y-2">
               <div className="text-sm font-medium">Transaction</div>
               <Select
-                value={filters.transactionId || ""}
-                onValueChange={(value) => handleFilterChange("transactionId", value || null)}
+                value={filters.transactionId || "all-transactions"}
+                onValueChange={(value) => handleFilterChange("transactionId", value === "all-transactions" ? null : value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="All Transactions" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Transactions</SelectItem>
+                  <SelectItem value="all-transactions">All Transactions</SelectItem>
                   <SelectItem value="none">No Transaction</SelectItem>
                   {transactions.map((tx) => (
                     <SelectItem key={tx.id} value={tx.id}>
@@ -137,14 +137,14 @@ export function CalendarSidebar({ filters, onFiltersChange, onAddEvent }: Calend
             <div className="space-y-2">
               <div className="text-sm font-medium">Client</div>
               <Select
-                value={filters.clientName || ""}
-                onValueChange={(value) => handleFilterChange("clientName", value || null)}
+                value={filters.clientName || "all-clients"}
+                onValueChange={(value) => handleFilterChange("clientName", value === "all-clients" ? null : value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="All Clients" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Clients</SelectItem>
+                  <SelectItem value="all-clients">All Clients</SelectItem>
                   {clients.map((client) => (
                     <SelectItem key={client.id} value={client.name}>
                       {client.name}
