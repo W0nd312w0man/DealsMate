@@ -5,17 +5,42 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ArrowRight, CheckCircle, ClipboardCheck, MessageSquare, ChevronRight } from "lucide-react"
 import { createClient } from "@supabase/supabase-js"
+import { useEffect } from "react"
 
 // Initialize Supabase client with placeholders for environment variables
 // Replace these placeholders with your actual Supabase URL and anon key
 const supabaseUrl = "https://ylpfxtdzizqrzhtxwelk.supabase.co"
-const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlscGZ4dGR6aXpxcnpodHh3ZWxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNjI1MDgsImV4cCI6MjA2MjgzODUwOH0.Gv623QSJLOZwYrPBhyOkw9Vk-kzrH4PI6qn125gD1Tw"
+const supabaseAnonKey =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlscGZ4dGR6aXpxcnpodHh3ZWxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNjI1MDgsImV4cCI6MjA2MjgzODUwOH0.Gv623QSJLOZwYrPBhyOkw9Vk-kzrH4PI6qn125gD1Tw"
 
 // Only create the client on the client side
 let supabase: ReturnType<typeof createClient> | null = null
 
 export default function LandingPage() {
   const router = useRouter()
+
+  // Add this useEffect hook right after the useRouter declaration in the LandingPage component
+  // This will check for access_token in the URL hash and redirect to dashboard if found
+
+  useEffect(() => {
+    // Check if we have an access token in the URL hash
+    if (typeof window !== "undefined") {
+      const hash = window.location.hash
+      if (hash && hash.includes("access_token=")) {
+        // Parse the hash to get the access token
+        const accessToken = hash.split("access_token=")[1]?.split("&")[0]
+
+        if (accessToken) {
+          console.log("Access token found, redirecting to dashboard")
+          // Store the token in localStorage or state management
+          localStorage.setItem("supabase.auth.token", accessToken)
+
+          // Redirect to dashboard
+          router.push("/dashboard")
+        }
+      }
+    }
+  }, [router])
 
   // Function to handle Google OAuth sign-in
   const handleGoogleSignIn = async () => {
