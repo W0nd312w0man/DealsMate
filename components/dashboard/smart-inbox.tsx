@@ -1033,60 +1033,27 @@ export function SmartInbox({
                           <EmailInlineView email={email} onClose={closeEmailView} onStarToggle={toggleStar} />
                         )}
 
-                        {/* Email Quick Actions */}
+                        {/* Expanded Email Preview */}
                         {expandedEmails.includes(email.id) && (
                           <div className="ml-12 mt-1 mb-2 bg-purple-50/30 p-2 rounded-md border border-purple-100">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Mail className="h-4 w-4 text-purple-600" />
-                              <span className="text-sm font-medium text-purple-700">Email Actions</span>
-                            </div>
-                            {renderActionButtons(email)}
-
-                            {/* Attachment Actions */}
+                            <div className="text-xs text-muted-foreground">{email.preview}</div>
                             {email.attachments && email.attachments.length > 0 && (
-                              <div className="mt-3 pt-2 border-t border-purple-100">
-                                <div className="flex items-center justify-between mb-2">
-                                  <div className="flex items-center gap-2">
-                                    <Paperclip className="h-4 w-4 text-purple-600" />
-                                    <span className="text-sm font-medium text-purple-700">Attachment Actions</span>
-                                  </div>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-6 px-2 text-xs"
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                      toggleAttachmentExpanded(email.id, e)
-                                    }}
-                                  >
-                                    {expandedAttachments.includes(email.id) ? "Hide Attachments" : "Show Attachments"}
-                                    {expandedAttachments.includes(email.id) ? (
-                                      <ChevronUp className="h-3 w-3 ml-1" />
-                                    ) : (
-                                      <ChevronDown className="h-3 w-3 ml-1" />
-                                    )}
-                                  </Button>
+                              <div className="mt-2 pt-2 border-t border-purple-100">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <Paperclip className="h-3.5 w-3.5 text-purple-500" />
+                                  <span className="text-xs font-medium">Attachments</span>
                                 </div>
-
-                                {expandedAttachments.includes(email.id) && (
-                                  <div className="space-y-2 mt-2">
-                                    {email.attachments.map((attachment) => (
-                                      <div
-                                        key={attachment.id}
-                                        className="bg-white p-2 rounded-md border border-purple-100"
-                                      >
-                                        <div className="flex items-center gap-2 mb-1">
-                                          <FileText className="h-3.5 w-3.5 text-purple-500" />
-                                          <span className="text-xs font-medium truncate">{attachment.fileName}</span>
-                                          <span className="text-xs text-muted-foreground ml-auto">
-                                            {(attachment.fileSize / 1024 / 1024).toFixed(1)} MB
-                                          </span>
-                                        </div>
-                                        {renderActionButtons(email, attachment.id)}
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
+                                <div className="grid grid-cols-1 gap-1 mt-1">
+                                  {email.attachments.map((attachment) => (
+                                    <div key={attachment.id} className="flex items-center gap-1 text-xs">
+                                      <FileText className="h-3 w-3 text-purple-500" />
+                                      <span className="truncate">{attachment.fileName}</span>
+                                      <span className="text-xs text-muted-foreground ml-auto">
+                                        {(attachment.fileSize / 1024 / 1024).toFixed(1)} MB
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
                             )}
                           </div>
