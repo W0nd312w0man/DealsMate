@@ -5,6 +5,7 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { SideBreadcrumbPanel } from "@/components/side-breadcrumb-panel"
 import { Toaster } from "@/components/ui/toaster"
+import { AuthProvider } from "@/hooks/use-auth"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -40,11 +41,13 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${poppins.variable}`}>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          <div className="flex min-h-screen">
-            <SideBreadcrumbPanel />
-            <div className="flex-1 flex flex-col">{children}</div>
-          </div>
-          <Toaster />
+          <AuthProvider>
+            <div className="flex min-h-screen">
+              <SideBreadcrumbPanel />
+              <div className="flex-1 flex flex-col">{children}</div>
+            </div>
+            <Toaster />
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

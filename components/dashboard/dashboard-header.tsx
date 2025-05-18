@@ -6,7 +6,17 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export function DashboardHeader() {
-  const { isLoading } = useAuth()
+  const { user, isLoading } = useAuth()
+
+  // Get initials for avatar fallback
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 2)
+  }
 
   return (
     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -22,12 +32,12 @@ export function DashboardHeader() {
         ) : (
           <>
             <Avatar className="h-12 w-12 border-2 border-purple-200">
-              <AvatarImage src="/bruce-wayne.png" alt="Bruce Wayne" />
-              <AvatarFallback>BW</AvatarFallback>
+              <AvatarImage src={user?.avatar_url || "/bruce-wayne.png"} alt={user?.name || "User"} />
+              <AvatarFallback>{user ? getInitials(user.name) : "U"}</AvatarFallback>
             </Avatar>
             <div>
               <h1 className="text-2xl font-bold">Dashboard</h1>
-              <p className="text-muted-foreground">Welcome to your dashboard, Bruce Wayne</p>
+              <p className="text-muted-foreground">Welcome to your dashboard, {user?.name || "User"}</p>
             </div>
           </>
         )}
