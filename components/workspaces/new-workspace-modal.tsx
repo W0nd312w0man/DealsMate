@@ -122,10 +122,23 @@ export function NewWorkspaceModal({ open, onOpenChange }: NewWorkspaceModalProps
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlscGZ4dGR6aXpxcnpodHh3ZWxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNjI1MDgsImV4cCI6MjA2MjgzODUwOH0.Gv623QSJLOZwYrPBhyOkw9Vk-kzrH4PI6qn125gD1Tw"
       const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-      // Get current user
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+      console.log("Attempting to create workspace:", propertyAddress)
+
+      // Get current user - make this optional to avoid blocking
+      let userId = "anonymous"
+      try {
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser()
+        if (user && !userError) {
+          userId = user.id
+        }
+      } catch (userError) {
+        console.warn("Could not get user, continuing as anonymous:", userError)
+      }
+
+      console.log("Using user ID:", userId)
 
       // Insert workspace into Supabase
       const { data, error } = await supabase
@@ -134,7 +147,7 @@ export function NewWorkspaceModal({ open, onOpenChange }: NewWorkspaceModalProps
           {
             property_address: propertyAddress,
             name: propertyAddress,
-            created_by: user?.id || "anonymous",
+            created_by: userId,
             status: "active",
             workspace_type: "property",
             created_at: new Date().toISOString(),
@@ -142,7 +155,12 @@ export function NewWorkspaceModal({ open, onOpenChange }: NewWorkspaceModalProps
         ])
         .select()
 
-      if (error) throw error
+      if (error) {
+        console.error("Supabase insert error:", error)
+        throw error
+      }
+
+      console.log("Workspace created successfully:", data)
 
       // Show success message
       setSuccessMessage(`Workspace "${propertyAddress}" created successfully!`)
@@ -158,7 +176,7 @@ export function NewWorkspaceModal({ open, onOpenChange }: NewWorkspaceModalProps
       }, 1500)
     } catch (error) {
       console.error("Error creating workspace:", error)
-      setErrors({ submit: "Failed to create workspace. Please try again." })
+      setErrors({ submit: `Failed to create workspace: ${error instanceof Error ? error.message : String(error)}` })
     } finally {
       setIsSubmitting(false)
     }

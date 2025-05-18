@@ -32,18 +32,25 @@ export default function WorkspacesPageClient() {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([])
   const [loading, setLoading] = useState(true)
 
+  // Add a key to force refresh when the component mounts
   useEffect(() => {
     const fetchWorkspaces = async () => {
+      setLoading(true)
       try {
         const supabaseUrl = "https://ylpfxtdzizqrzhtxwelk.supabase.co"
         const supabaseAnonKey =
           "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlscGZ4dGR6aXpxcnpodHh3ZWxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNjI1MDgsImV4cCI6MjA2MjgzODUwOH0.Gv623QSJLOZwYrPBhyOkw9Vk-kzrH4PI6qn125gD1Tw"
         const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
+        console.log("Fetching workspaces...")
         const { data, error } = await supabase.from("workspaces").select("*").order("created_at", { ascending: false })
 
-        if (error) throw error
+        if (error) {
+          console.error("Error fetching workspaces:", error)
+          throw error
+        }
 
+        console.log("Workspaces fetched:", data)
         setWorkspaces(data || [])
       } catch (error) {
         console.error("Error fetching workspaces:", error)
@@ -55,10 +62,10 @@ export default function WorkspacesPageClient() {
     fetchWorkspaces()
   }, [])
 
-  // Filter logic remains but will always return empty array
+  // Filter logic
   const filteredWorkspaces = workspaces.filter((workspace) => {
-    if (statusFilter === "active") return !workspace.isArchived
-    if (statusFilter === "archived") return workspace.isArchived
+    if (statusFilter === "active") return workspace.status === "active"
+    if (statusFilter === "archived") return workspace.status === "archived"
     return true
   })
 
@@ -119,9 +126,9 @@ export default function WorkspacesPageClient() {
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
         </div>
-      ) : workspaces.length > 0 ? (
+      ) : filteredWorkspaces.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {workspaces.map((workspace) => (
+          {filteredWorkspaces.map((workspace) => (
             <Link href={`/workspaces/${workspace.id}`} key={workspace.id}>
               <Card className="h-full hover:shadow-md transition-shadow duration-200 border-purple-800/20 hover:border-purple-500/30 cursor-pointer">
                 <CardContent className="p-6">
