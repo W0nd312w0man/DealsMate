@@ -59,15 +59,8 @@ export function DashboardHeader() {
         ) : (
           <>
             <Avatar className="h-12 w-12 border-2 border-purple-200">
-              <AvatarImage
-                src={
-                  displayUser?.email
-                    ? `https://ui-avatars.com/api/?name=${encodeURIComponent(displayUser.name || displayUser.email)}&background=random`
-                    : user?.avatar_url || "/bruce-wayne.png"
-                }
-                alt={displayUser?.name || "User"}
-              />
-              <AvatarFallback>{displayUser?.name ? getInitials(displayUser.name) : "U"}</AvatarFallback>
+              <AvatarImage alt={user?.name || "User"} />
+              <AvatarFallback>{user ? getInitials(user.name) : "U"}</AvatarFallback>
             </Avatar>
             <div>
               <h1 className="text-2xl font-bold">Dashboard</h1>

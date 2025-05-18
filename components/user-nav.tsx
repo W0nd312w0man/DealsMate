@@ -82,15 +82,8 @@ export function UserNav() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full ml-4">
           <Avatar className="h-8 w-8">
-            <AvatarImage
-              src={
-                displayUser?.email
-                  ? `https://ui-avatars.com/api/?name=${encodeURIComponent(displayUser.name || displayUser.email)}&background=random`
-                  : user?.avatar_url || "/bruce-wayne.png"
-              }
-              alt={displayUser?.name || "User"}
-            />
-            <AvatarFallback>{displayUser?.name ? getInitials(displayUser.name) : "U"}</AvatarFallback>
+            <AvatarImage alt={user?.name || "User"} />
+            <AvatarFallback>{user ? getInitials(user.name) : "U"}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
