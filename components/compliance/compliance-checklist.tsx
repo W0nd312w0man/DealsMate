@@ -8,88 +8,20 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
+import { CheckCircle } from "lucide-react"
 
 interface ComplianceChecklistProps extends React.HTMLAttributes<HTMLDivElement> {}
 
 export function ComplianceChecklist({ className, ...props }: ComplianceChecklistProps) {
   // Mock data - in a real app, this would come from an API
-  const transactions = [
-    { id: "tx-1234", address: "123 Main St (TX-1234)" },
-    { id: "tx-1235", address: "456 Oak Ave (TX-1235)" },
-    { id: "tx-1236", address: "789 Pine Rd (TX-1236)" },
-  ]
+  const transactions = []
 
-  const checklistItems = [
-    {
-      id: 1,
-      title: "Agency Disclosure",
-      description: "Signed disclosure of agency relationship",
-      required: true,
-      completed: false,
-      transactionId: "TX-1234",
-    },
-    {
-      id: 2,
-      title: "Purchase Agreement",
-      description: "Fully executed purchase agreement",
-      required: true,
-      completed: true,
-      transactionId: "TX-1234",
-    },
-    {
-      id: 3,
-      title: "Seller Disclosures",
-      description: "Property condition and other required disclosures",
-      required: true,
-      completed: true,
-      transactionId: "TX-1234",
-    },
-    {
-      id: 4,
-      title: "Lead-Based Paint Disclosure",
-      description: "Required for properties built before 1978",
-      required: true,
-      completed: false,
-      transactionId: "TX-1234",
-    },
-    {
-      id: 5,
-      title: "Earnest Money Receipt",
-      description: "Documentation of earnest money deposit",
-      required: true,
-      completed: true,
-      transactionId: "TX-1235",
-    },
-    {
-      id: 6,
-      title: "Inspection Reports",
-      description: "Home, pest, and other inspection reports",
-      required: false,
-      completed: true,
-      transactionId: "TX-1235",
-    },
-    {
-      id: 7,
-      title: "Loan Pre-Approval",
-      description: "Buyer's loan pre-approval documentation",
-      required: true,
-      completed: true,
-      transactionId: "TX-1236",
-    },
-    {
-      id: 8,
-      title: "Closing Disclosure",
-      description: "Final closing costs and terms",
-      required: true,
-      completed: false,
-      transactionId: "TX-1236",
-    },
-  ]
+  const checklistItems = []
 
   // Calculate completion percentage
   const completedRequired = checklistItems.filter((item) => item.required && item.completed).length
   const totalRequired = checklistItems.filter((item) => item.required).length
-  const completionPercentage = Math.round((completedRequired / totalRequired) * 100)
+  const completionPercentage = totalRequired > 0 ? Math.round((completedRequired / totalRequired) * 100) : 0
 
   return (
     <Card className={cn("shadow-soft card-hover overflow-hidden", className)} {...props}>
@@ -128,39 +60,49 @@ export function ComplianceChecklist({ className, ...props }: ComplianceChecklist
           </div>
 
           <div className="space-y-4">
-            {checklistItems.map((item) => (
-              <div key={item.id} className="flex items-start space-x-3 rounded-md border p-3 hover:bg-muted/50">
-                <Checkbox
-                  id={`item-${item.id}`}
-                  checked={item.completed}
-                  className="mt-1 data-[state=checked]:bg-purple-600 data-[state=checked]:text-white"
-                />
-                <div className="space-y-1 flex-1">
-                  <div className="flex items-center justify-between">
-                    <Label
-                      htmlFor={`item-${item.id}`}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                      {item.title}
-                      {item.required && <span className="ml-2 text-xs text-red-500">*Required</span>}
-                    </Label>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      asChild
-                      className="h-6 text-xs text-purple-600 hover:text-purple-700"
-                    >
-                      <Link href={`/transactions/${item.transactionId}?tab=compliance`}>
-                        View Transaction
-                        <ArrowRight className="ml-1 h-3 w-3" />
-                      </Link>
-                    </Button>
+            {checklistItems.length > 0 ? (
+              checklistItems.map((item) => (
+                <div key={item.id} className="flex items-start space-x-3 rounded-md border p-3 hover:bg-muted/50">
+                  <Checkbox
+                    id={`item-${item.id}`}
+                    checked={item.completed}
+                    className="mt-1 data-[state=checked]:bg-purple-600 data-[state=checked]:text-white"
+                  />
+                  <div className="space-y-1 flex-1">
+                    <div className="flex items-center justify-between">
+                      <Label
+                        htmlFor={`item-${item.id}`}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        {item.title}
+                        {item.required && <span className="ml-2 text-xs text-red-500">*Required</span>}
+                      </Label>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        asChild
+                        className="h-6 text-xs text-purple-600 hover:text-purple-700"
+                      >
+                        <Link href={`/transactions/${item.transactionId}?tab=compliance`}>
+                          View Transaction
+                          <ArrowRight className="ml-1 h-3 w-3" />
+                        </Link>
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{item.description}</p>
+                    <div className="text-xs text-muted-foreground mt-1">Transaction: {item.transactionId}</div>
                   </div>
-                  <p className="text-xs text-muted-foreground">{item.description}</p>
-                  <div className="text-xs text-muted-foreground mt-1">Transaction: {item.transactionId}</div>
                 </div>
+              ))
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <CheckCircle className="h-12 w-12 text-purple-200 mb-4" />
+                <h3 className="text-lg font-medium text-purple-700">No Compliance Items</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  No compliance checklist items are currently available.
+                </p>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </CardContent>

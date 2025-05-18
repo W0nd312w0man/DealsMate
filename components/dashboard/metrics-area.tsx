@@ -72,34 +72,26 @@ export function MetricsArea({
     <div className={cn("grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4", className)}>
       <MetricCard
         title="Unread Emails"
-        value="12"
+        value="0"
         icon={<Mail className="h-6 w-6 text-purple-700" />}
-        trend={{ value: "3 new today", positive: true }}
         onClick={onUnreadEmailsClick}
         isActive={activeFilters.unreadEmails}
       />
       <MetricCard
         title="Pending Tasks"
-        value="8"
+        value="0"
         icon={<CheckCircle2 className="h-6 w-6 text-purple-700" />}
-        trend={{ value: "2 due today", positive: false }}
         onClick={onPendingTasksClick}
         isActive={activeFilters.pendingTasks}
       />
       <MetricCard
         title="Today's Events"
-        value="4"
+        value="0"
         icon={<Calendar className="h-6 w-6 text-purple-700" />}
-        trend={{ value: "1 starting soon", positive: true }}
         onClick={onTodayEventsClick}
         isActive={activeFilters.todayEvents}
       />
-      <MetricCard
-        title="Active Clients"
-        value="16"
-        icon={<Users className="h-6 w-6 text-purple-700" />}
-        trend={{ value: "2 new this week", positive: true }}
-      />
+      <MetricCard title="Active Clients" value="0" icon={<Users className="h-6 w-6 text-purple-700" />} />
     </div>
   )
 }

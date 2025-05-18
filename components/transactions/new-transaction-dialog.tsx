@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import Link from "next/link"
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -74,10 +75,12 @@ export function NewTransactionDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-1 bg-gradient-to-r from-purple-600 to-pink-500 hover:opacity-90 transition-opacity">
-          <Plus className="h-4 w-4" />
-          New Transaction
-        </Button>
+        <Link href="/transactions/new">
+          <Button className="gap-1 bg-gradient-to-r from-purple-600 to-pink-500 hover:opacity-90 transition-opacity">
+            <Plus className="h-4 w-4" />
+            New Transaction
+          </Button>
+        </Link>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>

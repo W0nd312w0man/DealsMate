@@ -68,12 +68,7 @@ export function TasksCard({ className }: TasksCardProps) {
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="text-xl font-poppins text-purple-700">Tasks</CardTitle>
-            <CardDescription>
-              {pastDueTasks.length > 0 && (
-                <span className="text-pink-600 font-medium">{pastDueTasks.length} past due • </span>
-              )}
-              {filteredTasks.filter((t) => !t.completed).length} pending tasks
-            </CardDescription>
+            <CardDescription>No pending tasks</CardDescription>
           </div>
           <Button
             size="sm"

@@ -1,8 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { analyzeEmail } from "@/services/email-analysis-service"
-import { analyzeDocument } from "@/services/talos-ai-service"
 import type { EmailAttachment, EmailData } from "@/types/email"
 
 interface UseEmailAnalysisOptions {
@@ -16,50 +14,56 @@ export function useEmailAnalysis(options: UseEmailAnalysisOptions = {}) {
   const [analysisResults, setAnalysisResults] = useState<any[]>([])
   const [dismissedEmails, setDismissedEmails] = useState<string[]>([])
 
+  // Mock function without API calls
   const analyzeNewEmail = async (email: EmailData) => {
-    if (dismissedEmails.includes(email.id)) {
-      return null
-    }
-
     setIsAnalyzing(true)
 
-    try {
-      const result = await analyzeEmail(email)
+    // Simulate analysis
+    setTimeout(() => {
+      setIsAnalyzing(false)
 
-      if (result.hasRelevantAttachments) {
-        setAnalysisResults((prev) => [...prev, result])
-        if (onAnalysisComplete) {
-          onAnalysisComplete(result)
-        }
-        return result
+      // Mock result
+      const result = {
+        emailId: email.id,
+        hasAttachments: email.attachments && email.attachments.length > 0,
+        suggestedActions: [],
       }
 
-      return null
-    } catch (error) {
-      console.error("Error analyzing email:", error)
-      return null
-    } finally {
-      setIsAnalyzing(false)
-    }
+      setAnalysisResults((prev) => [...prev, result])
+
+      if (onAnalysisComplete) {
+        onAnalysisComplete(result)
+      }
+    }, 1000)
   }
 
+  // Mock function without API calls
   const analyzeAttachment = async (attachment: EmailAttachment, email: EmailData) => {
     setIsAnalyzing(true)
 
-    try {
-      const result = await analyzeDocument(attachment, email)
-      return result
-    } catch (error) {
-      console.error("Error analyzing attachment:", error)
-      return null
-    } finally {
+    // Simulate analysis
+    setTimeout(() => {
       setIsAnalyzing(false)
-    }
+
+      // Mock result
+      const result = {
+        attachmentId: attachment.id,
+        emailId: email.id,
+        documentType: "unknown",
+        extractedData: {},
+      }
+
+      if (onAnalysisComplete) {
+        onAnalysisComplete(result)
+      }
+
+      return result
+    }, 1000)
   }
 
   const dismissEmail = (emailId: string) => {
     setDismissedEmails((prev) => [...prev, emailId])
-    setAnalysisResults((prev) => prev.filter((result) => result.emailData.id !== emailId))
+    setAnalysisResults((prev) => prev.filter((result) => result.emailId !== emailId))
   }
 
   const handleActionComplete = (emailId: string) => {

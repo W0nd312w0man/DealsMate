@@ -37,17 +37,8 @@ export function DocumentUpload() {
     // Simulate AI processing delay
     await new Promise((resolve) => setTimeout(resolve, 2000))
 
-    // Mock extracted data
-    setExtractedData({
-      "Property Address": "123 Main St, Anytown, CA 90210",
-      "Purchase Price": "$750,000",
-      "Closing Date": "April 15, 2025",
-      "Buyer Name": "John & Sarah Smith",
-      "Seller Name": "Michael Johnson",
-      "Earnest Money": "$15,000",
-      "Inspection Deadline": "March 25, 2025",
-      "Financing Deadline": "April 1, 2025",
-    })
+    // Empty extracted data
+    setExtractedData({})
 
     setIsProcessing(false)
   }
@@ -68,9 +59,8 @@ export function DocumentUpload() {
                 <SelectValue placeholder="Select transaction" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="tx-1234">123 Main St (TX-1234)</SelectItem>
-                <SelectItem value="tx-1235">456 Oak Ave (TX-1235)</SelectItem>
-                <SelectItem value="tx-1236">789 Pine Rd (TX-1236)</SelectItem>
+                {/* Transaction options will be populated from API */}
+                <SelectItem value="select">Select a transaction</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -148,12 +138,16 @@ export function DocumentUpload() {
             <div className="rounded-lg border border-purple-200 bg-purple-50/30 p-4">
               <div className="mb-2 font-medium text-purple-700">AI-Extracted Data</div>
               <div className="grid gap-2">
-                {Object.entries(extractedData).map(([key, value]) => (
-                  <div key={key} className="grid grid-cols-2 gap-2 text-sm">
-                    <div className="font-medium">{key}:</div>
-                    <div>{value}</div>
-                  </div>
-                ))}
+                {Object.entries(extractedData).length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No data extracted. Please try again.</p>
+                ) : (
+                  Object.entries(extractedData).map(([key, value]) => (
+                    <div key={key} className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="font-medium">{key}:</div>
+                      <div>{value}</div>
+                    </div>
+                  ))
+                )}
               </div>
               <div className="mt-4 flex justify-end space-x-2">
                 <Button

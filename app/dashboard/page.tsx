@@ -83,6 +83,7 @@ export default function DashboardPage() {
             onFilterChange={handleEmailFilterChange}
             className="w-full flex-1 flex flex-col"
             showAttachmentDetection={true}
+            isSetUp={false} // Set to false to show the setup UI
           />
         </div>
 

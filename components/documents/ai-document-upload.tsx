@@ -70,12 +70,8 @@ export function AIDocumentUpload() {
   const [expandedItem, setExpandedItem] = useState<string | null>(null)
   const [validationExpanded, setValidationExpanded] = useState(true)
 
-  // Mock transactions data
-  const transactions = [
-    { id: "tx-1234", address: "123 Main St (TX-1234)" },
-    { id: "tx-1235", address: "456 Oak Ave (TX-1235)" },
-    { id: "tx-1236", address: "789 Pine Rd (TX-1236)" },
-  ]
+  // Empty transactions data
+  const transactions = []
 
   // Document types
   const documentTypes = [
@@ -260,161 +256,34 @@ export function AIDocumentUpload() {
     clearInterval(processingInterval)
     setProcessingProgress(100)
 
-    // Mock extracted data based on document type
-    if (documentType === "purchase-agreement") {
-      setExtractedData({
-        propertyAddress: {
-          streetAddress: "123 Main St",
-          city: "Anytown",
-          state: "CA",
-          zipCode: "90210",
-        },
-        partiesInvolved: {
-          buyer: "John & Sarah Smith",
-          seller: "Michael Johnson",
-          buyerBroker: "XYZ Realty, Jane Wilson",
-          sellerBroker: "ABC Properties, Robert Davis",
-        },
-        financialDetails: {
-          salesPrice: "$750,000",
-          earnestMoney: "$15,000",
-          loanAmount: "$600,000",
-          closingCosts: "$12,500",
-        },
-        keyDates: {
-          contractDate: "March 15, 2025",
-          inspectionDeadline: "March 25, 2025",
-          financingDeadline: "April 1, 2025",
-          closingDate: "April 15, 2025",
-          possessionDate: "April 16, 2025",
-        },
-        additionalTerms: "Seller to leave all appliances. Buyer requests early occupancy 3 days before closing.",
-        transactionStatus: "review",
-        needsAttention: false,
-        needsCommissionDetails: false,
-        hasPostCloseCorrection: false,
-        hasShortTermAdvancement: false,
-      })
-    } else if (documentType === "inspection-report") {
-      setExtractedData({
-        propertyAddress: {
-          streetAddress: "123 Main St",
-          city: "Anytown",
-          state: "CA",
-          zipCode: "90210",
-        },
-        inspectionDetails: {
-          inspectionDate: "March 20, 2025",
-          inspector: "Quality Home Inspections, LLC",
-          inspectionType: "Full Home Inspection",
-        },
-        majorIssues: [
-          "Roof showing signs of wear, estimated 2-3 years of life remaining",
-          "HVAC system needs servicing",
-          "Minor water damage in basement corner",
-        ],
-        recommendedRepairs: [
-          "Replace weather stripping on exterior doors",
-          "Service HVAC system",
-          "Repair gutter on north side of house",
-        ],
-        overallCondition: "Good with minor issues noted",
-        transactionStatus: "needs-attention",
-        needsAttention: true,
-        needsCommissionDetails: false,
-        hasPostCloseCorrection: false,
-        hasShortTermAdvancement: false,
-      })
-    } else if (documentType === "closing-disclosure") {
-      setExtractedData({
-        propertyAddress: {
-          streetAddress: "456 Oak Ave",
-          city: "Somewhere",
-          state: "CA",
-          zipCode: "90211",
-        },
-        partiesInvolved: {
-          buyer: "Robert Wilson",
-          seller: "Emily & David Brown",
-          buyerBroker: "XYZ Realty",
-          sellerBroker: "ABC Properties",
-        },
-        financialDetails: {
-          salesPrice: "$925,000",
-          earnestMoney: "$20,000",
-          loanAmount: "$740,000",
-          closingCosts: "$18,500",
-        },
-        keyDates: {
-          contractDate: "February 15, 2025",
-          closingDate: "March 30, 2025",
-        },
-        transactionStatus: "commission-review",
-        needsAttention: false,
-        needsCommissionDetails: true,
-        hasPostCloseCorrection: false,
-        hasShortTermAdvancement: false,
-      })
-    } else if (documentType === "addendum") {
-      setExtractedData({
-        propertyAddress: {
-          streetAddress: "789 Pine Rd",
-          city: "Elsewhere",
-          state: "CA",
-          zipCode: "90212",
-        },
-        partiesInvolved: {
-          buyer: "James & Lisa Thompson",
-          seller: "Richard Davis",
-          buyerBroker: "XYZ Realty",
-          sellerBroker: "ABC Properties",
-        },
-        financialDetails: {
-          salesPrice: "$1,050,000",
-          earnestMoney: "$25,000",
-        },
-        keyDates: {
-          contractDate: "January 10, 2025",
-          closingDate: "February 28, 2025",
-        },
-        transactionStatus: "payment-issued",
-        needsAttention: false,
-        needsCommissionDetails: false,
-        hasPostCloseCorrection: true,
-        hasShortTermAdvancement: true,
-      })
-    } else {
-      setExtractedData({
-        propertyAddress: {
-          streetAddress: transactions.find((t) => t.id === selectedTransaction)?.address.split(",")[0] || "123 Main St",
-          city: "Anytown",
-          state: "CA",
-          zipCode: "90210",
-        },
-        partiesInvolved: {
-          buyer: "John & Sarah Smith",
-          seller: "Michael Johnson",
-          buyerBroker: "XYZ Realty",
-          sellerBroker: "ABC Properties",
-        },
-        financialDetails: {
-          salesPrice: "$750,000",
-          earnestMoney: "$15,000",
-        },
-        keyDates: {
-          contractDate: "March 15, 2025",
-          closingDate: "April 15, 2025",
-        },
-        documentType: documentTypes.find((d) => d.id === documentType)?.name || documentType,
-        uploadDate: new Date().toLocaleDateString(),
-        status: "Pending Review",
-        transactionStatus: "broker-approved",
-        needsAttention: false,
-        needsCommissionDetails: false,
-        hasPostCloseCorrection: false,
-        hasShortTermAdvancement: false,
-      })
-    }
+    // Empty extracted data
+    setExtractedData({
+      propertyAddress: {
+        streetAddress: "",
+        city: "",
+        state: "",
+        zipCode: "",
+      },
+      partiesInvolved: {
+        buyer: "",
+        seller: "",
+        buyerBroker: "",
+        sellerBroker: "",
+      },
+      financialDetails: {
+        salesPrice: "",
+        earnestMoney: "",
+      },
+      keyDates: {
+        contractDate: "",
+        closingDate: "",
+      },
+      transactionStatus: "review",
+      needsAttention: false,
+      needsCommissionDetails: false,
+      hasPostCloseCorrection: false,
+      hasShortTermAdvancement: false,
+    })
 
     // Add a success message
     setSuccessMessage("Document successfully processed! Key information has been extracted.")
@@ -1395,123 +1264,6 @@ export function AIDocumentUpload() {
                             </div>
                           ))}
                         </div>
-
-                        {/* Transaction Timeline */}
-                        {renderTransactionTimeline(
-                          extractedData.transactionStatus,
-                          extractedData.needsAttention,
-                          extractedData.needsCommissionDetails,
-                          extractedData.hasPostCloseCorrection,
-                          extractedData.hasShortTermAdvancement,
-                        )}
-                      </CollapsibleContent>
-                    </Collapsible>
-                  )}
-
-                  {/* Additional Information - Expandable */}
-                  {extractedData.additionalTerms && (
-                    <Collapsible
-                      open={expandedItem === "additionalTerms"}
-                      onOpenChange={() => toggleExpand("additionalTerms")}
-                      className="mb-6 border rounded-lg p-3 hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex justify-between items-center">
-                        <h3 className="text-md font-semibold text-purple-700">Additional Terms</h3>
-                        <CollapsibleTrigger asChild>
-                          <Button variant="ghost" size="sm" className="p-0 h-8 w-8">
-                            {expandedItem === "additionalTerms" ? (
-                              <ChevronUp className="h-4 w-4" />
-                            ) : (
-                              <ChevronDown className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </CollapsibleTrigger>
-                      </div>
-                      <CollapsibleContent>
-                        <div className="mt-3 text-sm">{extractedData.additionalTerms}</div>
-
-                        {/* Transaction Timeline */}
-                        {renderTransactionTimeline(
-                          extractedData.transactionStatus,
-                          extractedData.needsAttention,
-                          extractedData.needsCommissionDetails,
-                          extractedData.hasPostCloseCorrection,
-                          extractedData.hasShortTermAdvancement,
-                        )}
-                      </CollapsibleContent>
-                    </Collapsible>
-                  )}
-
-                  {/* Inspection Details - Expandable */}
-                  {extractedData.inspectionDetails && (
-                    <Collapsible
-                      open={expandedItem === "inspectionDetails"}
-                      onOpenChange={() => toggleExpand("inspectionDetails")}
-                      className="mb-6 border rounded-lg p-3 hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex justify-between items-center">
-                        <h3 className="text-md font-semibold text-purple-700">Inspection Details</h3>
-                        <CollapsibleTrigger asChild>
-                          <Button variant="ghost" size="sm" className="p-0 h-8 w-8">
-                            {expandedItem === "inspectionDetails" ? (
-                              <ChevronUp className="h-4 w-4" />
-                            ) : (
-                              <ChevronDown className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </CollapsibleTrigger>
-                      </div>
-                      <CollapsibleContent>
-                        <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2">
-                          {Object.entries(extractedData.inspectionDetails).map(([key, value]) => (
-                            <div key={key}>
-                              <div className="text-sm font-medium text-purple-700">
-                                {key.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())}:
-                              </div>
-                              <div className="text-sm">{value}</div>
-                            </div>
-                          ))}
-                        </div>
-
-                        {/* Transaction Timeline */}
-                        {renderTransactionTimeline(
-                          extractedData.transactionStatus,
-                          extractedData.needsAttention,
-                          extractedData.needsCommissionDetails,
-                          extractedData.hasPostCloseCorrection,
-                          extractedData.hasShortTermAdvancement,
-                        )}
-                      </CollapsibleContent>
-                    </Collapsible>
-                  )}
-
-                  {/* Major Issues - Expandable */}
-                  {extractedData.majorIssues && (
-                    <Collapsible
-                      open={expandedItem === "majorIssues"}
-                      onOpenChange={() => toggleExpand("majorIssues")}
-                      className="mb-6 border rounded-lg p-3 hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex justify-between items-center">
-                        <h3 className="text-md font-semibold text-purple-700">Major Issues</h3>
-                        <CollapsibleTrigger asChild>
-                          <Button variant="ghost" size="sm" className="p-0 h-8 w-8">
-                            {expandedItem === "majorIssues" ? (
-                              <ChevronUp className="h-4 w-4" />
-                            ) : (
-                              <ChevronDown className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </CollapsibleTrigger>
-                      </div>
-                      <CollapsibleContent>
-                        <ul className="mt-3 list-disc list-inside space-y-1">
-                          {extractedData.majorIssues.map((issue, index) => (
-                            <li key={index} className="text-sm">
-                              {issue}
-                            </li>
-                          ))}
-                        </ul>
 
                         {/* Transaction Timeline */}
                         {renderTransactionTimeline(

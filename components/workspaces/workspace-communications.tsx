@@ -25,12 +25,9 @@ export function WorkspaceCommunications({ workspaceId }: WorkspaceCommunications
         </div>
       </CardHeader>
       <CardContent>
-        {/* Communication interface would go here */}
         <div className="rounded-lg border border-dashed p-8 text-center">
-          <h3 className="text-lg font-medium">Communication Management</h3>
-          <p className="mt-2 text-sm text-muted-foreground">
-            This is a placeholder for the communication management interface.
-          </p>
+          <h3 className="text-lg font-medium">No Communications</h3>
+          <p className="mt-2 text-sm text-muted-foreground">There are no communications for this workspace yet.</p>
         </div>
       </CardContent>
     </Card>

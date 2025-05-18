@@ -25,10 +25,9 @@ export function WorkspaceTasks({ workspaceId }: WorkspaceTasksProps) {
         </div>
       </CardHeader>
       <CardContent>
-        {/* Task management interface would go here */}
         <div className="rounded-lg border border-dashed p-8 text-center">
-          <h3 className="text-lg font-medium">Task Management</h3>
-          <p className="mt-2 text-sm text-muted-foreground">This is a placeholder for the task management interface.</p>
+          <h3 className="text-lg font-medium">No Tasks</h3>
+          <p className="mt-2 text-sm text-muted-foreground">There are no tasks for this workspace yet.</p>
         </div>
       </CardContent>
     </Card>

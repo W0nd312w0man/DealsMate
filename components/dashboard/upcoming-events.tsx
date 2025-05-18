@@ -34,53 +34,8 @@ export function UpcomingEvents({ className, filterTodayOnly = false, onFilterCha
     setShowTodayOnly(filterTodayOnly)
   }, [filterTodayOnly])
 
-  // Mock data for events
-  const events: Event[] = [
-    {
-      id: "e1",
-      title: "Property Showing - 15614 Yermo Street",
-      date: "Today",
-      time: "2:00 PM - 3:30 PM",
-      location: "15614 Yermo Street, Whittier, CA",
-      type: "showing",
-      participants: ["Karen Chen", "Potential Buyers (3)"],
-      workspaceId: "ws-1",
-      workspaceName: "Karen Chen - 15614 Yermo Street",
-    },
-    {
-      id: "e2",
-      title: "Client Meeting - Michael Johnson",
-      date: "Today",
-      time: "4:30 PM - 5:30 PM",
-      location: "Virtual (Zoom)",
-      type: "meeting",
-      participants: ["Michael Johnson", "Listing Agent"],
-      workspaceId: "ws-2",
-      workspaceName: "Michael Johnson - 456 Oak Avenue",
-    },
-    {
-      id: "e3",
-      title: "Home Inspection - 456 Oak Avenue",
-      date: "Tomorrow",
-      time: "10:00 AM - 12:00 PM",
-      location: "456 Oak Avenue, Somewhere, CA",
-      type: "other",
-      participants: ["Inspector", "Michael Johnson"],
-      workspaceId: "ws-2",
-      workspaceName: "Michael Johnson - 456 Oak Avenue",
-    },
-    {
-      id: "e4",
-      title: "Closing - Cedar Lane Property",
-      date: "Apr 28, 2025",
-      time: "11:00 AM - 12:30 PM",
-      location: "Title Company Office",
-      type: "closing",
-      participants: ["Robert Wilson", "Title Agent", "Lender"],
-      workspaceId: "ws-4",
-      workspaceName: "Robert Wilson - 101 Cedar Lane",
-    },
-  ]
+  // Events array - to be populated from API
+  const events: Event[] = []
 
   // Filter events based on today filter
   const filteredEvents = events.filter((event) => {
@@ -118,11 +73,7 @@ export function UpcomingEvents({ className, filterTodayOnly = false, onFilterCha
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="text-xl font-poppins text-purple-700">Upcoming Events</CardTitle>
-            <CardDescription>
-              {showTodayOnly
-                ? "Showing today's events only"
-                : `${events.filter((e) => e.date === "Today").length} events today`}
-            </CardDescription>
+            <CardDescription>{showTodayOnly ? "Showing today's events only" : "No events today"}</CardDescription>
           </div>
           <div className="flex items-center gap-2">
             <Button

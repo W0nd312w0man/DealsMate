@@ -1,11 +1,20 @@
+"use client"
+
+import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ArrowRight, CheckCircle, ClipboardCheck, MessageSquare, ChevronRight } from "lucide-react"
+import { SignInDialog } from "@/components/landing/sign-in-dialog"
 
 export default function LandingPage() {
+  const [signInDialogOpen, setSignInDialogOpen] = useState(false)
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-purple-950 via-purple-900 to-purple-800 text-white overflow-hidden">
+      {/* Sign In Dialog */}
+      <SignInDialog open={signInDialogOpen} onOpenChange={setSignInDialogOpen} />
+
       {/* Header */}
       <header className="w-full border-b border-white/10 bg-purple-950/70 backdrop-blur-md sticky top-0 z-50">
         <div className="container flex h-16 items-center justify-between py-4">
@@ -23,8 +32,12 @@ export default function LandingPage() {
             <Link href="#benefits" className="text-sm font-medium text-purple-200 hover:text-white transition-colors">
               Benefits
             </Link>
-            <Button asChild size="sm" className="bg-purple-500 hover:bg-purple-400 text-white transition-colors">
-              <Link href="/dashboard">Sign In</Link>
+            <Button
+              size="sm"
+              className="bg-purple-500 hover:bg-purple-400 text-white transition-colors"
+              onClick={() => setSignInDialogOpen(true)}
+            >
+              Sign In
             </Button>
           </div>
 
@@ -37,6 +50,7 @@ export default function LandingPage() {
         </div>
       </header>
 
+      {/* Rest of the landing page content remains unchanged */}
       {/* Hero Section - Redesigned */}
       <section className="relative py-16 md:py-24 lg:py-32 overflow-hidden">
         {/* Background elements */}

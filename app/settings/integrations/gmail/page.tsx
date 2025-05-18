@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { BreadcrumbNav } from "@/components/breadcrumb-nav"
-import { GmailIntegrationClient } from "@/components/settings/gmail-integration-client"
+import { GmailIntegrationSettings } from "@/components/settings/gmail-integration-settings"
 
 export const metadata: Metadata = {
   title: "Gmail Integration | DealMate",
@@ -18,7 +18,7 @@ export default function GmailIntegrationPage() {
         </p>
       </div>
 
-      <GmailIntegrationClient />
+      <GmailIntegrationSettings />
     </div>
   )
 }

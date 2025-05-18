@@ -24,28 +24,11 @@ export default function WorkspaceDetailsPage({ params }: { params: { id: string 
   // In a real app, you would fetch the workspace data based on the ID
   const workspace = {
     id: params.id,
-    name: "15614 Yermo Street Property",
+    name: "",
     isArchived: isArchived,
-    createdDate: "Apr 25, 2025",
-    updatedDate: "Apr 26, 2025",
-    parties: [
-      {
-        id: "party-1",
-        name: "John Smith",
-        role: "Buyer",
-        email: "john.smith@example.com",
-        phone: "(555) 123-4567",
-        isPrimary: true,
-      },
-      {
-        id: "party-2",
-        name: "Jane Doe",
-        role: "Seller",
-        email: "jane.doe@example.com",
-        phone: "(555) 987-6543",
-        isPrimary: true,
-      },
-    ],
+    createdDate: "",
+    updatedDate: "",
+    parties: [],
   }
 
   const handleArchiveToggle = async () => {

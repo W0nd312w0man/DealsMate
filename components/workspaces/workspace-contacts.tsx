@@ -25,12 +25,9 @@ export function WorkspaceContacts({ workspaceId }: WorkspaceContactsProps) {
         </div>
       </CardHeader>
       <CardContent>
-        {/* Contact management interface would go here */}
         <div className="rounded-lg border border-dashed p-8 text-center">
-          <h3 className="text-lg font-medium">Contact Management</h3>
-          <p className="mt-2 text-sm text-muted-foreground">
-            This is a placeholder for the contact management interface.
-          </p>
+          <h3 className="text-lg font-medium">No Contacts</h3>
+          <p className="mt-2 text-sm text-muted-foreground">There are no contacts for this workspace yet.</p>
         </div>
       </CardContent>
     </Card>

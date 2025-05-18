@@ -288,7 +288,7 @@ export function CalendarEventDialog({ open, onOpenChange, event, onSave, onDelet
                     <SelectValue placeholder="Transaction (optional)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No Transaction</SelectItem>
+                    <SelectItem value="no-transaction">No Transaction</SelectItem>
                     {transactions.map((tx) => (
                       <SelectItem key={tx.id} value={tx.id}>
                         {tx.id} - {tx.address}

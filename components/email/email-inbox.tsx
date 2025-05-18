@@ -1,33 +1,13 @@
 "use client"
 
-import type React from "react"
-
 import { useState, useEffect } from "react"
 import { useGmail } from "@/contexts/gmail-context"
 import type { ParsedEmail } from "@/types/gmail"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
-import { EmailComposer } from "@/components/email/email-composer"
-import { EmailViewer } from "@/components/email/email-viewer"
-import {
-  Search,
-  RefreshCw,
-  Star,
-  StarOff,
-  Trash2,
-  Mail,
-  MailOpen,
-  Paperclip,
-  Plus,
-  InboxIcon,
-  Send,
-  Loader2,
-} from "lucide-react"
+import { Star, StarOff, Trash2, Mail, MailOpen, Paperclip, InboxIcon, Send } from "lucide-react"
 
 interface EmailInboxProps {
   className?: string
@@ -35,11 +15,16 @@ interface EmailInboxProps {
 
 export function EmailInbox({ className }: EmailInboxProps) {
   const gmail = useGmail()
+  const [emails, setEmails] = useState<ParsedEmail[]>([])
   const [activeTab, setActiveTab] = useState("inbox")
   const [searchQuery, setSearchQuery] = useState("")
   const [isComposingEmail, setIsComposingEmail] = useState(false)
   const [selectedEmail, setSelectedEmail] = useState<ParsedEmail | null>(null)
   const [isRefreshing, setIsRefreshing] = useState(false)
+
+  useEffect(() => {
+    // TODO: Fetch emails from your data source
+  }, [])
 
   // Refresh emails on mount and when tab changes
   useEffect(() => {
@@ -131,18 +116,24 @@ export function EmailInbox({ className }: EmailInboxProps) {
     }
   }
 
-  // Handle email selection
   const handleEmailSelect = (email: ParsedEmail) => {
     setSelectedEmail(email)
+  }
 
-    // Mark as read if not already
-    if (!email.isRead) {
-      gmail.markAsRead(email.id)
-    }
+  const handleStarToggle = (email: ParsedEmail) => {
+    // TODO: Implement star toggle
+  }
+
+  const handleTrashEmail = (email: ParsedEmail) => {
+    // TODO: Implement trash email
+  }
+
+  const handleReadToggle = (email: ParsedEmail) => {
+    // TODO: Implement read toggle
   }
 
   // Handle email star toggle
-  const handleStarToggle = (email: ParsedEmail, e: React.MouseEvent) => {
+  /*const handleStarToggle = (email: ParsedEmail, e: React.MouseEvent) => {
     e.stopPropagation()
     gmail.toggleStar(email.id, !email.isStarred)
   }
@@ -162,7 +153,7 @@ export function EmailInbox({ className }: EmailInboxProps) {
     } else {
       gmail.markAsRead(email.id)
     }
-  }
+  }*/
 
   // Format date
   const formatDate = (date: Date): string => {
@@ -340,112 +331,28 @@ export function EmailInbox({ className }: EmailInboxProps) {
 
   return (
     <Card className={className}>
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Email Inbox</CardTitle>
-            <CardDescription>{gmail.profile?.email}</CardDescription>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => setIsComposingEmail(true)} className="gap-1">
-              <Plus className="h-4 w-4" />
-              Compose
-            </Button>
-            <Button variant="outline" size="icon" onClick={refreshEmails} disabled={isRefreshing} title="Refresh">
-              {isRefreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-            </Button>
-          </div>
-        </div>
+      <CardHeader>
+        <CardTitle>Email Inbox</CardTitle>
+        <CardDescription>Manage your emails</CardDescription>
       </CardHeader>
-      <CardContent className="p-0">
-        <div className="flex h-[600px] border-t">
-          {/* Email List */}
-          <div className="w-1/3 border-r flex flex-col">
-            <div className="p-2 border-b">
-              <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Search emails..."
-                  className="pl-8"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <Tabs defaultValue="inbox" value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-              <TabsList className="grid grid-cols-3 h-auto p-0 bg-transparent">
-                <TabsTrigger
-                  value="inbox"
-                  className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 rounded-none border-b-2 data-[state=active]:border-blue-700 data-[state=inactive]:border-transparent"
-                >
-                  Inbox
-                  {gmail.unreadCount > 0 && <Badge className="ml-1 bg-blue-500">{gmail.unreadCount}</Badge>}
-                </TabsTrigger>
-                <TabsTrigger
-                  value="starred"
-                  className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 rounded-none border-b-2 data-[state=active]:border-blue-700 data-[state=inactive]:border-transparent"
-                >
-                  Starred
-                </TabsTrigger>
-                <TabsTrigger
-                  value="sent"
-                  className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 rounded-none border-b-2 data-[state=active]:border-blue-700 data-[state=inactive]:border-transparent"
-                >
-                  Sent
-                </TabsTrigger>
-              </TabsList>
-
-              <div className="flex-1 overflow-y-auto">{renderEmailList()}</div>
-            </Tabs>
-          </div>
-
-          {/* Email Viewer */}
-          <div className="w-2/3 flex flex-col">
-            {selectedEmail ? (
-              <EmailViewer
-                email={selectedEmail}
-                onClose={() => setSelectedEmail(null)}
-                onReply={() => {
-                  // TODO: Implement reply
-                }}
-                onForward={() => {
-                  // TODO: Implement forward
-                }}
-                onDelete={handleTrashEmail}
-                onToggleStar={handleStarToggle}
-                onToggleRead={handleReadToggle}
-              />
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full text-center p-6">
-                <div className="rounded-full bg-gray-100 p-4 mb-4">
-                  <Mail className="h-8 w-8 text-gray-400" />
+      <CardContent>
+        {gmail.isConnected ? (
+          <div className="flex h-[600px]">
+            <div className="w-1/3 border-r">
+              {emails.map((email) => (
+                <div key={email.id} onClick={() => handleEmailSelect(email)}>
+                  {email.subject}
                 </div>
-                <h3 className="text-lg font-medium">No Email Selected</h3>
-                <p className="text-sm text-muted-foreground mt-1 max-w-md">
-                  Select an email from the list to view its contents.
-                </p>
-              </div>
-            )}
+              ))}
+            </div>
+            <div className="w-2/3">
+              {selectedEmail ? <div>{selectedEmail.body.text}</div> : <div>Select an email to view</div>}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div>Connect to Gmail to view your inbox</div>
+        )}
       </CardContent>
-
-      {/* Email Composer */}
-      <EmailComposer
-        isOpen={isComposingEmail}
-        onClose={() => setIsComposingEmail(false)}
-        onSend={async (email) => {
-          try {
-            await gmail.sendEmail(email)
-            setIsComposingEmail(false)
-            refreshEmails()
-          } catch (error) {
-            console.error("Failed to send email:", error)
-          }
-        }}
-      />
     </Card>
   )
 }

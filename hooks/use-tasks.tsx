@@ -5,138 +5,9 @@ import type { Task, TaskOwnerRole, TaskStatus } from "@/types/task"
 import { useToast } from "@/components/ui/use-toast"
 import type { TalosNotification } from "@/components/talos/talos-notifications"
 
-// Mock data function - in a real app, this would fetch from an API
-function getMockTasks(): Task[] {
-  return [
-    {
-      id: "t1",
-      title: "Review purchase agreement for Karen Chen",
-      dueDate: "Today, 2:00 PM",
-      completed: false,
-      priority: "high",
-      transaction: "TX-1234",
-      transactionAddress: "15614 Yermo Street, Los Angeles, CA",
-      client: "Karen Chen",
-      workspaceId: "ws-1",
-      workspaceName: "Karen Chen Property Purchase",
-      isPastDue: false,
-      createdBy: "manual",
-      ownerRole: "agent",
-      ownerName: "John Smith",
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "t2",
-      title: "Schedule home inspection for 456 Oak Avenue",
-      dueDate: "Today, 5:00 PM",
-      completed: false,
-      priority: "high",
-      transaction: "TX-1235",
-      transactionAddress: "456 Oak Avenue, San Diego, CA",
-      client: "Michael Johnson",
-      workspaceId: "ws-2",
-      workspaceName: "Johnson Property Sale",
-      isPastDue: false,
-      createdBy: "talos-ai",
-      ownerRole: "transaction-coordinator",
-      ownerName: "Sarah Williams",
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "t3",
-      title: "Send listing photos to Emily Brown",
-      dueDate: "Tomorrow, 10:00 AM",
-      completed: false,
-      priority: "medium",
-      client: "Emily Brown",
-      workspaceId: "ws-3",
-      isPastDue: false,
-      createdBy: "manual",
-      ownerRole: "agent",
-      ownerName: "Robert Davis",
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "t4",
-      title: "Prepare closing documents for Cedar Lane property",
-      dueDate: "Apr 28, 2025",
-      completed: false,
-      priority: "medium",
-      transaction: "TX-1237",
-      transactionAddress: "101 Cedar Lane, San Francisco, CA",
-      client: "Robert Wilson",
-      workspaceId: "ws-4",
-      isPastDue: false,
-      createdBy: "manual",
-      ownerRole: "broker",
-      ownerName: "Jennifer Lopez",
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "t5",
-      title: "Follow up with potential buyers for Maple Street",
-      dueDate: "Apr 29, 2025",
-      completed: false,
-      priority: "low",
-      transaction: "TX-1238",
-      transactionAddress: "789 Maple Street, Oakland, CA",
-      client: "Sarah Smith",
-      workspaceId: "ws-5",
-      isPastDue: false,
-      createdBy: "talos-ai",
-      ownerRole: "agent",
-      ownerName: "Michael Brown",
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "t6",
-      title: "Complete transaction checklist for Oak Avenue",
-      dueDate: "Apr 22, 2025",
-      completed: true,
-      priority: "high",
-      transaction: "TX-1235",
-      transactionAddress: "456 Oak Avenue, San Diego, CA",
-      client: "Michael Johnson",
-      workspaceId: "ws-2",
-      isPastDue: false,
-      createdBy: "manual",
-      ownerRole: "transaction-coordinator",
-      ownerName: "Sarah Williams",
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "t7",
-      title: "Submit disclosure forms for Yermo Street",
-      dueDate: "Apr 20, 2025",
-      completed: false,
-      priority: "high",
-      transaction: "TX-1234",
-      transactionAddress: "15614 Yermo Street, Los Angeles, CA",
-      client: "Karen Chen",
-      workspaceId: "ws-1",
-      isPastDue: true,
-      createdBy: "manual",
-      ownerRole: "broker",
-      ownerName: "David Wilson",
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "t8",
-      title: "Call lender about pre-approval for Robert Wilson",
-      dueDate: "Apr 19, 2025",
-      completed: false,
-      priority: "medium",
-      transaction: "TX-1237",
-      transactionAddress: "101 Cedar Lane, San Francisco, CA",
-      client: "Robert Wilson",
-      workspaceId: "ws-4",
-      isPastDue: true,
-      createdBy: "talos-ai",
-      ownerRole: "manager",
-      ownerName: "Lisa Johnson",
-      createdAt: new Date().toISOString(),
-    },
-  ]
+// Function to get tasks - to be implemented with real API
+function getTasks(): Task[] {
+  return []
 }
 
 interface UseTasksOptions {
@@ -161,7 +32,7 @@ export function useTasks(options: UseTasksOptions = {}) {
   } = options
 
   const { toast } = useToast()
-  const [tasks, setTasks] = useState<Task[]>(getMockTasks())
+  const [tasks, setTasks] = useState<Task[]>([])
   const [statusFilter, setStatusFilter] = useState<TaskStatus | "all">(initialStatusFilter)
   const [roleFilters, setRoleFilters] = useState<TaskOwnerRole[]>(
     Array.isArray(initialRoleFilter) ? initialRoleFilter : initialRoleFilter === "all" ? [] : [initialRoleFilter],

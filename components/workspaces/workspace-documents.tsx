@@ -25,12 +25,9 @@ export function WorkspaceDocuments({ workspaceId }: WorkspaceDocumentsProps) {
         </div>
       </CardHeader>
       <CardContent>
-        {/* Document management interface would go here */}
         <div className="rounded-lg border border-dashed p-8 text-center">
-          <h3 className="text-lg font-medium">Document Management</h3>
-          <p className="mt-2 text-sm text-muted-foreground">
-            This is a placeholder for the document management interface.
-          </p>
+          <h3 className="text-lg font-medium">No Documents</h3>
+          <p className="mt-2 text-sm text-muted-foreground">There are no documents for this workspace yet.</p>
         </div>
       </CardContent>
     </Card>

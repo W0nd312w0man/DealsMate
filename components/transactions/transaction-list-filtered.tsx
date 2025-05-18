@@ -1,7 +1,5 @@
 "use client"
 
-// Update the TransactionListFiltered to use the useTransactions hook
-
 import { useTransactions } from "@/hooks/use-transactions"
 import { TransactionStatusFilter } from "./transaction-status-filter"
 import { TransactionList } from "./transaction-list"
@@ -21,7 +19,7 @@ export function TransactionListFiltered() {
         </div>
       ) : (
         <div>
-          {statusFilter && (
+          {statusFilter && filteredTransactions.length > 0 && (
             <div className="mb-4 flex items-center justify-between">
               <div className="text-sm text-muted-foreground">
                 Showing {filteredTransactions.length} transactions with status:

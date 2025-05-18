@@ -1,21 +1,17 @@
-"use server"
+"use client"
 
-// This is a simple mock authentication function
-// In a real application, you would use a proper authentication system
-export async function authenticateAdmin(email: string, password: string) {
-  // Simulate a network delay
-  await new Promise((resolve) => setTimeout(resolve, 1000))
+// Remove all API calls from auth actions\
+export async function authenticateAdmin(email: string, password string) {
+  // Return mock success without making API calls
+  return { success: true, message: "" };
+}
 
-  // Check if the credentials match the admin credentials
-  if (email === "ADMIN@LYNQRE.com" && password === "V1531210n!") {
-    return {
-      success: true,
-      message: "Authentication successful",
-    }
-  }
+export async function signOut() {
+  // Return mock success without making API calls
+  return { success: true }
+}
 
-  return {
-    success: false,
-    message: "Invalid email or password",
-  }
+export async function signUp(formData: FormData) {
+  // Return mock success without making API calls
+  return { success: true }
 }

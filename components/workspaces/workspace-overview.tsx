@@ -36,87 +36,33 @@ export function WorkspaceOverview({ workspaceId }: WorkspaceOverviewProps) {
     setSellers(workspaceParties.getSellersByWorkspace(workspaceId))
   }, [workspaceId, workspaceParties])
 
-  // Mock data for the workspace
+  // Empty workspace structure
   const workspace = {
     id: workspaceId,
-    name: "15614 Yermo Street, Whittier, CA 90603",
-    address: "15614 Yermo Street, Whittier, CA 90603",
-    type: "property",
+    name: "",
+    address: "",
+    type: "",
     isArchived: false,
-    lastActivity: "2 hours ago",
-    tasks: 3,
-    messages: 5,
-    email: "karen.chen@gmail.com",
-    phone: "(555) 123-4567",
-    firstContactDate: "Apr 20, 2025",
-    nextFollowUp: "Apr 28, 2025",
-    notes:
-      "Karen is looking for a 3-4 bedroom home in the Whittier area. Budget is around $850,000. Prequalified with ABC Mortgage.",
-    prequalified: true,
-    prequalifiedAmount: "$850,000",
+    lastActivity: "",
+    tasks: 0,
+    messages: 0,
+    email: "",
+    phone: "",
+    firstContactDate: "",
+    nextFollowUp: "",
+    notes: "",
+    prequalified: false,
+    prequalifiedAmount: "",
   }
 
-  // Mock data for upcoming tasks
-  const upcomingTasks = [
-    {
-      id: "task-1",
-      title: "Schedule property viewing",
-      dueDate: "Apr 28, 2025",
-      priority: "high",
-      completed: false,
-    },
-    {
-      id: "task-2",
-      title: "Send comparable properties",
-      dueDate: "Apr 30, 2025",
-      priority: "medium",
-      completed: false,
-    },
-    {
-      id: "task-3",
-      title: "Follow up on mortgage pre-approval",
-      dueDate: "May 5, 2025",
-      priority: "medium",
-      completed: false,
-    },
-  ]
+  // Empty tasks array
+  const upcomingTasks: any[] = []
 
-  // Mock data for recent communications
-  const recentCommunications = [
-    {
-      id: "comm-1",
-      type: "email",
-      subject: "Interested in 15614 Yermo Street property",
-      date: "Apr 25, 2025",
-      preview:
-        "Hi, I saw the listing for 15614 Yermo Street in Whittier and I'm very interested in scheduling a viewing...",
-    },
-    {
-      id: "comm-2",
-      type: "call",
-      subject: "Initial consultation call",
-      date: "Apr 23, 2025",
-      preview: "Discussed property requirements and budget. Karen is looking for a 3-4 bedroom home in Whittier.",
-    },
-  ]
+  // Empty communications array
+  const recentCommunications: any[] = []
 
-  // Mock data for TALOS suggestions
-  const talosSuggestions = [
-    {
-      id: "suggestion-1",
-      title: "Schedule a follow-up call",
-      description: "It's been 5 days since your last communication with Karen.",
-      action: "Schedule Call",
-      actionLink: "#",
-    },
-    {
-      id: "suggestion-2",
-      title: "Send property listings",
-      description: "3 new properties matching Karen's criteria were listed today.",
-      action: "Send Listings",
-      actionLink: "#",
-    },
-  ]
+  // Empty suggestions array
+  const talosSuggestions: any[] = []
 
   return (
     <div className="grid gap-6 md:grid-cols-3">
@@ -312,6 +258,12 @@ export function WorkspaceOverview({ workspaceId }: WorkspaceOverviewProps) {
                 </Button>
               </div>
 
+              {upcomingTasks.length === 0 && (
+                <div className="rounded-lg border border-dashed p-4 text-center">
+                  <p className="text-sm text-muted-foreground">No upcoming tasks</p>
+                </div>
+              )}
+
               <div className="space-y-2">
                 {upcomingTasks.map((task) => (
                   <div key={task.id} className="flex items-center justify-between rounded-lg border p-3">
@@ -359,6 +311,12 @@ export function WorkspaceOverview({ workspaceId }: WorkspaceOverviewProps) {
                 </Button>
               </div>
 
+              {recentCommunications.length === 0 && (
+                <div className="rounded-lg border border-dashed p-4 text-center">
+                  <p className="text-sm text-muted-foreground">No recent communications</p>
+                </div>
+              )}
+
               <div className="space-y-2">
                 {recentCommunications.map((comm) => (
                   <div key={comm.id} className="rounded-lg border p-3">
@@ -404,6 +362,11 @@ export function WorkspaceOverview({ workspaceId }: WorkspaceOverviewProps) {
             <CardDescription>AI-powered suggestions for this workspace</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {talosSuggestions.length === 0 && (
+              <div className="rounded-lg border border-dashed p-4 text-center">
+                <p className="text-sm text-muted-foreground">No suggestions available</p>
+              </div>
+            )}
             {talosSuggestions.map((suggestion) => (
               <div
                 key={suggestion.id}
