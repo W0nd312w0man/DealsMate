@@ -57,6 +57,30 @@ const safeSessionStorage = {
   },
 }
 
+interface BackendEmail {
+  id: string
+  from: string
+  subject: string
+  snippet: string
+  date: string
+  isRead: boolean
+  labelIds: string[]
+  threadId: string
+  hasAttachments: boolean
+  contentType: string
+  attachments?: {
+    attachmentId: string
+    filename: string
+    mimeType: string
+    partId: string
+    size: number
+  }[]
+}
+
+interface BackendEmailResponse {
+  emails: BackendEmail[]
+}
+
 interface Email {
   id: string
   from: {
@@ -176,83 +200,147 @@ export function SmartInbox({
     try {
       console.log("Fetching emails with token:", token.substring(0, 10) + "...")
 
-      // Create mock emails for demonstration
-      const mockEmails: Email[] = [
-        {
-          id: "email-1",
-          from: {
-            name: "Karen Chen",
-            email: "karen.chen@example.com",
-          },
-          subject: "Offer Accepted on 15614 Yermo Street",
-          preview:
-            "Great news! The sellers have accepted your offer on the property at 15614 Yermo Street, Whittier, CA 90603.",
-          date: "2023-05-15",
-          read: false,
-          starred: true,
-          category: "transaction",
-          labels: ["Important", "Transaction"],
-          attachments: [
-            {
-              id: "attachment-1",
-              fileName: "Purchase_Agreement_15614_Yermo_St.pdf",
-              fileType: "application/pdf",
-              fileSize: 2500000,
-            },
-          ],
-        },
-        {
-          id: "email-2",
-          from: {
-            name: "Michael Rodriguez",
-            email: "michael.rodriguez@example.com",
-          },
-          subject: "Inspection Report for 8721 Oakwood Lane",
-          preview:
-            "Please find attached the inspection report for 8721 Oakwood Lane. There are a few items that need attention.",
-          date: "2023-05-14",
-          read: true,
-          starred: false,
-          category: "transaction",
-          labels: ["Transaction"],
-          attachments: [
-            {
-              id: "attachment-2",
-              fileName: "Inspection_Report_8721_Oakwood.pdf",
-              fileType: "application/pdf",
-              fileSize: 3200000,
-            },
-            {
-              id: "attachment-3",
-              fileName: "Inspection_Photos.zip",
-              fileType: "application/zip",
-              fileSize: 15000000,
-            },
-          ],
-        },
-        {
-          id: "email-3",
-          from: {
-            name: "Sarah Johnson",
-            email: "sarah.johnson@example.com",
-          },
-          subject: "Interested in listing my property",
-          preview: "I'm interested in listing my property at 4532 Maple Avenue. Can we schedule a time to discuss?",
-          date: "2023-05-13",
-          read: false,
-          starred: false,
-          category: "lead",
-          labels: ["Lead", "New"],
-        },
-      ]
-
       // In a real implementation, we would fetch emails from Gmail API
-      // const response = await GmailService.listThreads(token);
-      // const threads = response.threads;
-      // ... process threads into emails format
+      // For now, let's use mock data in the backend format
+      const mockBackendResponse: BackendEmailResponse = {
+        emails: [
+          {
+            attachments: [
+              {
+                attachmentId:
+                  "ANGjdJ9FL3P1DKLTasbbuxoHNR0XCdttxp7WDdZksQiAaIf0ZMwP0McvIq1eRk_5u_fbXKEvaw2rMLCtTI1a6qyyTFWK5xy22kEnw4qDb9BKEUSVb2ZcKLxN-qTtoig9D1KBbGRgtBroBqNt73huaNjMp9bav8l2MkjHOgjysor45fBM60Ziu5RB9HMN3GSAZ3V_fNZRisKc9sjNQnPN6X69P2AseNPCyLIpurEc0HYAWU6N4ise8MTpLD5VU7johEx-z9F1PAcQxQY7Kl6T9vY-qch2yPJlLNUBTeym3oupeoQFAngLJhzzrPTJ4YmMe1JZOq5KXLf7ymL2zskUE7LF1KtCo8Aq98yW9bCOA6ewG-RnK6Wf77SfS7U-DccmDrEKHREMDisMLu5OrjsH",
+                filename: "50 Windmill Offer.pdf",
+                mimeType: "application/pdf",
+                partId: "1",
+                size: 4152194,
+              },
+            ],
+            contentType: 'multipart/mixed; boundary="000000000000253fcd0635594faf"',
+            date: "Sat, 17 May 2025 11:45:40 -0700",
+            from: "Jennifer Verde <verde.jenn@gmail.com>",
+            hasAttachments: true,
+            id: "196df913894e170f",
+            isRead: true,
+            labelIds: ["IMPORTANT", "CATEGORY_PERSONAL", "INBOX"],
+            snippet:
+              "Bruce, my clients are prepared to make an offer on Windwill, this is our highest and best! Looking forward to speaking to you! Jennifer Verde EXP Realty",
+            subject: "Offer for Windmill",
+            threadId: "196df913894e170f",
+          },
+          {
+            attachments: [
+              {
+                attachmentId:
+                  "ANGjdJ-XYJcvM8osGuAt9Fx0jl70iz6xEWohfsdGLMWH3DevIcikBE00SvIZSxYzDTpmgqgc_4OdlH5REWdGYM7dz0KEmBHX_GUe9XBpYNAd0gCTmC0IRvqGNbEbIMKIAFNF5sqhXG881mJVOjRS8kecFL-Ww_n3qIvoC5yHrvw25Jqmy-R2ZJ-8ZKOi6Q4OUcXQLDB2Xb-1HQwg9Yj-2QrMe6Se0jLZ2BPlnkbh3-VNq5vbnURxDCtgxtgEfQ3sjPnMjbRjeqmtnbMz-ONyb4sacyNQvu1fEiTflV2L4xbP4e8uv82Z3FtVOQtJS6UJxBFdTWy0raZCCCuK8aoQYM64ZqtdyEfbknjpY7pn_7OM5KwwkVIhcOwp047-uJe83ezdQJLdDXHIQxSzSfeh",
+                filename: "22 Colonial Drive.pdf",
+                mimeType: "application/pdf",
+                partId: "1",
+                size: 543753,
+              },
+            ],
+            contentType: 'multipart/mixed; boundary="000000000000aa30c10635593eda"',
+            date: "Sat, 17 May 2025 11:41:08 -0700",
+            from: "Sam Lane <lanesammy61@gmail.com>",
+            hasAttachments: true,
+            id: "196df8cfe1861465",
+            isRead: true,
+            labelIds: ["IMPORTANT", "CATEGORY_PERSONAL", "INBOX"],
+            snippet:
+              "Bruce, let&#39;s open escrow! We have an accepted offer. Title company will be reaching out directly. Thank you, MOD Lux Reatly Sammy Lane",
+            subject: "73 Kent Cornwall Rd | Offer Accepted",
+            threadId: "196df8cfe1861465",
+          },
+          {
+            contentType: 'multipart/alternative; boundary="0000000000000216fa0634fba6b5"',
+            date: "Mon, 12 May 2025 20:01:15 -0700",
+            from: "Sam Lane <lanesammy61@gmail.com>",
+            hasAttachments: false,
+            id: "196c7971023983ad",
+            isRead: true,
+            labelIds: ["IMPORTANT", "CATEGORY_PERSONAL", "INBOX"],
+            snippet:
+              "Bruce, my clients are interested in the property but are worried about the water marks on the ceiling. Can you give me more details? Sam Lane MODE LUX Realty",
+            subject: "Offer Main Street",
+            threadId: "196c7971023983ad",
+          },
+          {
+            contentType: 'multipart/alternative; boundary="000000000000218aaa0634fba0a4"',
+            date: "Mon, 12 May 2025 19:59:38 -0700",
+            from: "Jennifer Verde <peppercorncottage.la@gmail.com>",
+            hasAttachments: false,
+            id: "196c7958aac44ebe",
+            isRead: true,
+            labelIds: ["CATEGORY_PERSONAL", "INBOX"],
+            snippet: "Bruce, we scheduled the inspection for next week Thursday May 22nd. See you there!",
+            subject: "2458 Salzburge Street, Whittier CA 90601 Inspection",
+            threadId: "196c7958aac44ebe",
+          },
+        ],
+      }
 
-      console.log("Fetched emails:", mockEmails.length)
-      setEmails(mockEmails)
+      // Transform backend emails to our format
+      const transformedEmails: Email[] = mockBackendResponse.emails.map((backendEmail) => {
+        // Parse the from field to extract name and email
+        const fromMatch = backendEmail.from.match(/([^<]+)<([^>]+)>/)
+        const name = fromMatch ? fromMatch[1].trim() : backendEmail.from
+        const email = fromMatch ? fromMatch[2].trim() : ""
+
+        // Format the date
+        const dateObj = new Date(backendEmail.date)
+        const formattedDate = dateObj.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        })
+
+        // Determine category based on subject
+        let category: "transaction" | "lead" | "client" | "workspace" | "other" = "other"
+        const subjectLower = backendEmail.subject.toLowerCase()
+        if (subjectLower.includes("offer") || subjectLower.includes("escrow") || subjectLower.includes("inspection")) {
+          category = "transaction"
+        } else if (subjectLower.includes("interested") || subjectLower.includes("inquiry")) {
+          category = "lead"
+        }
+
+        // Transform attachments
+        const attachments = backendEmail.attachments?.map((att) => ({
+          id: att.attachmentId,
+          fileName: att.filename,
+          fileType: att.mimeType,
+          fileSize: att.size,
+        }))
+
+        // Map labels
+        const labels = backendEmail.labelIds.map((label) => {
+          if (label === "IMPORTANT") return "Important"
+          if (label === "CATEGORY_PERSONAL") return "Personal"
+          if (label === "INBOX") return "Inbox"
+          return label
+        })
+
+        // Determine if starred based on IMPORTANT label
+        const starred = backendEmail.labelIds.includes("IMPORTANT")
+
+        return {
+          id: backendEmail.id,
+          from: {
+            name,
+            email,
+            avatar: undefined, // No avatar in backend data
+          },
+          subject: backendEmail.subject,
+          preview: backendEmail.snippet,
+          date: formattedDate,
+          read: backendEmail.isRead,
+          starred,
+          category,
+          labels,
+          attachments,
+        }
+      })
+
+      console.log("Transformed emails:", transformedEmails.length)
+      setEmails(transformedEmails)
       setIsLoading(false)
     } catch (error) {
       console.error("Error fetching emails:", error)
