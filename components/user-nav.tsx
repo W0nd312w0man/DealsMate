@@ -15,16 +15,39 @@ import {
 import { useAuth } from "@/hooks/use-auth"
 import { useRouter } from "next/navigation"
 
+// Safe sessionStorage access
+const safeSessionStorage = {
+  getItem: (key: string): string | null => {
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem(key)
+    }
+    return null
+  },
+  removeItem: (key: string): void => {
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem(key)
+    }
+  },
+}
+
 export function UserNav() {
   const { user, signOut, isLoading } = useAuth()
   const router = useRouter()
   const [gmailUser, setGmailUser] = useState<{ email?: string; name?: string } | null>(null)
+  const [isMounted, setIsMounted] = useState(false)
+
+  // Set mounted state to ensure we only access browser APIs after mount
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   // Check for Gmail user info on component mount and when window gains focus
   useEffect(() => {
+    if (!isMounted) return
+
     const checkGmailUser = () => {
-      const email = sessionStorage.getItem("gmail_user_email")
-      const name = sessionStorage.getItem("gmail_user_name")
+      const email = safeSessionStorage.getItem("gmail_user_email")
+      const name = safeSessionStorage.getItem("gmail_user_name")
 
       if (email) {
         setGmailUser({ email, name: name || email.split("@")[0] })
@@ -40,7 +63,7 @@ export function UserNav() {
     return () => {
       window.removeEventListener("focus", checkGmailUser)
     }
-  }, [])
+  }, [isMounted])
 
   // Get initials for avatar fallback
   const getInitials = (name: string) => {
@@ -54,11 +77,13 @@ export function UserNav() {
 
   const handleSignOut = async () => {
     // Clear Gmail session data
-    sessionStorage.removeItem("gmail_access_token")
-    sessionStorage.removeItem("gmail_refresh_token")
-    sessionStorage.removeItem("gmail_token_expiry")
-    sessionStorage.removeItem("gmail_user_email")
-    sessionStorage.removeItem("gmail_user_name")
+    if (typeof window !== "undefined") {
+      safeSessionStorage.removeItem("gmail_access_token")
+      safeSessionStorage.removeItem("gmail_refresh_token")
+      safeSessionStorage.removeItem("gmail_token_expiry")
+      safeSessionStorage.removeItem("gmail_user_email")
+      safeSessionStorage.removeItem("gmail_user_name")
+    }
 
     await signOut()
     router.push("/landing")
@@ -66,8 +91,10 @@ export function UserNav() {
 
   // Get user name from Supabase metadata if available
   const getUserName = () => {
+    if (!isMounted) return user?.name || "User"
+
     // First try to get from Supabase metadata in sessionStorage
-    const supabaseName = sessionStorage.getItem("supabase_user_name")
+    const supabaseName = safeSessionStorage.getItem("supabase_user_name")
     if (supabaseName) return supabaseName
 
     // Then try to get from user object
@@ -82,8 +109,10 @@ export function UserNav() {
 
   // Get user email from Supabase metadata if available
   const getUserEmail = () => {
+    if (!isMounted) return user?.email || "user@example.com"
+
     // First try to get from Supabase metadata in sessionStorage
-    const supabaseEmail = sessionStorage.getItem("supabase_user_email")
+    const supabaseEmail = safeSessionStorage.getItem("supabase_user_email")
     if (supabaseEmail) return supabaseEmail
 
     // Then try to get from user object
@@ -98,8 +127,10 @@ export function UserNav() {
 
   // Get user avatar from Supabase metadata if available
   const getUserAvatar = () => {
+    if (!isMounted) return user?.avatar_url
+
     // First try to get from Supabase metadata in sessionStorage
-    const supabaseAvatar = sessionStorage.getItem("supabase_user_avatar")
+    const supabaseAvatar = safeSessionStorage.getItem("supabase_user_avatar")
     if (supabaseAvatar) return supabaseAvatar
 
     // Then try to get from user object

@@ -6,6 +6,21 @@ import { useToast } from "@/components/ui/use-toast"
 import { GmailService } from "@/services/gmail-service"
 import { useAuth } from "@/hooks/use-auth"
 
+// Safe sessionStorage access
+const safeSessionStorage = {
+  getItem: (key: string): string | null => {
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem(key)
+    }
+    return null
+  },
+  setItem: (key: string, value: string): void => {
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(key, value)
+    }
+  },
+}
+
 export default function GmailAuthSuccessPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -31,9 +46,9 @@ export default function GmailAuthSuccessPage() {
           const expiryTime = Date.now() + Number.parseInt(expiresIn) * 1000
 
           // Store tokens in sessionStorage
-          sessionStorage.setItem("gmail_access_token", accessToken)
-          sessionStorage.setItem("gmail_refresh_token", refreshToken)
-          sessionStorage.setItem("gmail_token_expiry", expiryTime.toString())
+          safeSessionStorage.setItem("gmail_access_token", accessToken)
+          safeSessionStorage.setItem("gmail_refresh_token", refreshToken)
+          safeSessionStorage.setItem("gmail_token_expiry", expiryTime.toString())
 
           console.log("Tokens stored in sessionStorage")
 
@@ -43,8 +58,8 @@ export default function GmailAuthSuccessPage() {
             const userProfile = await GmailService.getUserProfile(accessToken)
 
             // Store Gmail user info in sessionStorage
-            sessionStorage.setItem("gmail_user_email", userProfile.email)
-            sessionStorage.setItem("gmail_user_name", userProfile.name || userProfile.email.split("@")[0])
+            safeSessionStorage.setItem("gmail_user_email", userProfile.email)
+            safeSessionStorage.setItem("gmail_user_name", userProfile.name || userProfile.email.split("@")[0])
 
             console.log("Gmail user profile stored:", userProfile)
 
@@ -60,7 +75,11 @@ export default function GmailAuthSuccessPage() {
             })
 
             // Force a window reload to ensure all components pick up the restored user info
-            window.location.href = "/dashboard"
+            if (typeof window !== "undefined") {
+              window.location.href = "/dashboard"
+            } else {
+              router.push("/dashboard")
+            }
             return // Stop execution after redirect
           } catch (error) {
             console.error("Error fetching user profile:", error)

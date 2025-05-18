@@ -42,6 +42,21 @@ import { useEmailViewPreferences } from "@/hooks/use-email-view-preferences"
 import { EmailInlineView } from "@/components/email/email-inline-view"
 import Link from "next/link"
 
+// Safe sessionStorage access
+const safeSessionStorage = {
+  getItem: (key: string): string | null => {
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem(key)
+    }
+    return null
+  },
+  setItem: (key: string, value: string): void => {
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(key, value)
+    }
+  },
+}
+
 interface Email {
   id: string
   from: {
@@ -108,15 +123,23 @@ export function SmartInbox({
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [emails, setEmails] = useState<Email[]>([])
+  const [isMounted, setIsMounted] = useState(false)
+
+  // Set mounted state to ensure we only access browser APIs after mount
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   // Check for Gmail tokens on component mount and when window is focused
   useEffect(() => {
+    if (!isMounted) return
+
     const checkGmailAuth = () => {
       console.log("Checking Gmail auth...")
-      const accessToken = sessionStorage.getItem("gmail_access_token")
-      const refreshToken = sessionStorage.getItem("gmail_refresh_token")
-      const tokenExpiry = sessionStorage.getItem("gmail_token_expiry")
-      const email = sessionStorage.getItem("gmail_user_email")
+      const accessToken = safeSessionStorage.getItem("gmail_access_token")
+      const refreshToken = safeSessionStorage.getItem("gmail_refresh_token")
+      const tokenExpiry = safeSessionStorage.getItem("gmail_token_expiry")
+      const email = safeSessionStorage.getItem("gmail_user_email")
 
       console.log("Access token:", accessToken ? "Present" : "Not present")
       console.log("User email:", email)
@@ -139,15 +162,11 @@ export function SmartInbox({
     checkGmailAuth()
 
     // Also check when window is focused (in case user authenticated in another tab)
-    const handleFocus = () => {
-      checkGmailAuth()
-    }
-
-    window.addEventListener("focus", handleFocus)
+    window.addEventListener("focus", checkGmailAuth)
     return () => {
-      window.removeEventListener("focus", handleFocus)
+      window.removeEventListener("focus", checkGmailAuth)
     }
-  }, [propIsSetUp])
+  }, [isMounted, propIsSetUp])
 
   // Fetch emails from Gmail
   const fetchEmails = async (token: string) => {
@@ -244,6 +263,8 @@ export function SmartInbox({
 
   // Handle copying token to clipboard
   const copyTokenToClipboard = () => {
+    if (!isMounted) return
+
     if (gmailAccessToken) {
       navigator.clipboard.writeText(gmailAccessToken)
       setCopySuccess(true)
@@ -267,43 +288,43 @@ export function SmartInbox({
 
   // Simulate checking for new emails with attachments
   useEffect(() => {
-    if (showAttachmentDetection) {
-      const checkForNewEmails = async () => {
-        // In a real implementation, this would poll an email API
-        // For this demo, we'll simulate a new email with an attachment
-        const mockEmail = {
-          id: `email-${Date.now()}`,
-          from: {
-            name: "Karen Chen",
-            email: "karen.chen@example.com",
-          },
-          subject: "Offer Accepted on 15614 Yermo Street",
-          body: "Great news! The sellers have accepted your offer on the property at 15614 Yermo Street, Whittier, CA 90603. I've attached the signed purchase agreement for your records. Let's schedule a call to discuss next steps.",
-          receivedAt: new Date(),
-          attachments: [
-            {
-              id: `attachment-${Date.now()}`,
-              fileName: "Purchase_Agreement_15614_Yermo_St.pdf",
-              fileType: "application/pdf",
-              fileSize: 2500000,
-              url: "#",
-            },
-          ],
-        }
+    if (!isMounted || !showAttachmentDetection) return
 
-        // Only show the notification if we haven't already processed this email
-        if (!dismissedEmails.includes(mockEmail.id)) {
-          const result = await analyzeEmail(mockEmail)
-          if (result.hasRelevantAttachments) {
-            setAnalysisResults((prev) => [...prev, result])
-          }
-        }
+    const checkForNewEmails = async () => {
+      // In a real implementation, this would poll an email API
+      // For this demo, we'll simulate a new email with an attachment
+      const mockEmail = {
+        id: `email-${Date.now()}`,
+        from: {
+          name: "Karen Chen",
+          email: "karen.chen@example.com",
+        },
+        subject: "Offer Accepted on 15614 Yermo Street",
+        body: "Great news! The sellers have accepted your offer on the property at 15614 Yermo Street, Whittier, CA 90603. I've attached the signed purchase agreement for your records. Let's schedule a call to discuss next steps.",
+        receivedAt: new Date(),
+        attachments: [
+          {
+            id: `attachment-${Date.now()}`,
+            fileName: "Purchase_Agreement_15614_Yermo_St.pdf",
+            fileType: "application/pdf",
+            fileSize: 2500000,
+            url: "#",
+          },
+        ],
       }
 
-      // Check for new emails on component mount
-      checkForNewEmails()
+      // Only show the notification if we haven't already processed this email
+      if (!dismissedEmails.includes(mockEmail.id)) {
+        const result = await analyzeEmail(mockEmail)
+        if (result.hasRelevantAttachments) {
+          setAnalysisResults((prev) => [...prev, result])
+        }
+      }
     }
-  }, [dismissedEmails, showAttachmentDetection])
+
+    // Check for new emails on component mount
+    checkForNewEmails()
+  }, [dismissedEmails, showAttachmentDetection, isMounted])
 
   const handleDismiss = (emailId: string) => {
     setDismissedEmails((prev) => [...prev, emailId])
@@ -707,7 +728,7 @@ export function SmartInbox({
         </div>
       </CardHeader>
 
-      {isGmailConnected && (
+      {isGmailConnected && isMounted && (
         <div className="px-6 py-3 bg-blue-50 border-y border-blue-100">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-medium text-blue-700">Gmail Access Token</h3>

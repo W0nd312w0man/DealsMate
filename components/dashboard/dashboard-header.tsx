@@ -6,15 +6,33 @@ import { useAuth } from "@/hooks/use-auth"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Skeleton } from "@/components/ui/skeleton"
 
+// Safe sessionStorage access
+const safeSessionStorage = {
+  getItem: (key: string): string | null => {
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem(key)
+    }
+    return null
+  },
+}
+
 export function DashboardHeader() {
   const { user, isLoading } = useAuth()
   const [gmailUser, setGmailUser] = useState<{ email?: string; name?: string } | null>(null)
+  const [isMounted, setIsMounted] = useState(false)
+
+  // Set mounted state to ensure we only access browser APIs after mount
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   // Check for Gmail user info on component mount and when window gains focus
   useEffect(() => {
+    if (!isMounted) return
+
     const checkGmailUser = () => {
-      const email = sessionStorage.getItem("gmail_user_email")
-      const name = sessionStorage.getItem("gmail_user_name")
+      const email = safeSessionStorage.getItem("gmail_user_email")
+      const name = safeSessionStorage.getItem("gmail_user_name")
 
       if (email) {
         setGmailUser({ email, name: name || email.split("@")[0] })
@@ -30,7 +48,7 @@ export function DashboardHeader() {
     return () => {
       window.removeEventListener("focus", checkGmailUser)
     }
-  }, [])
+  }, [isMounted])
 
   // Get initials for avatar fallback
   const getInitials = (name: string) => {
@@ -44,8 +62,10 @@ export function DashboardHeader() {
 
   // Get user name from Supabase metadata if available
   const getUserName = () => {
+    if (!isMounted) return user?.name || "User"
+
     // First try to get from Supabase metadata in sessionStorage
-    const supabaseName = sessionStorage.getItem("supabase_user_name")
+    const supabaseName = safeSessionStorage.getItem("supabase_user_name")
     if (supabaseName) return supabaseName
 
     // Then try to get from user object
@@ -60,8 +80,10 @@ export function DashboardHeader() {
 
   // Get user avatar from Supabase metadata if available
   const getUserAvatar = () => {
+    if (!isMounted) return user?.avatar_url
+
     // First try to get from Supabase metadata in sessionStorage
-    const supabaseAvatar = sessionStorage.getItem("supabase_user_avatar")
+    const supabaseAvatar = safeSessionStorage.getItem("supabase_user_avatar")
     if (supabaseAvatar) return supabaseAvatar
 
     // Then try to get from user object
@@ -95,7 +117,7 @@ export function DashboardHeader() {
               <h1 className="text-2xl font-bold">Dashboard</h1>
               <p className="text-muted-foreground">
                 Welcome to your dashboard, {userName}
-                {user?.email && user.email !== userName ? ` (${user.email})` : ""}
+                {user?.email && user.email !== userName && isMounted ? ` (${user.email})` : ""}
               </p>
             </div>
           </>
