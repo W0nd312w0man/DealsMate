@@ -13,6 +13,15 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Card, CardContent } from "@/components/ui/card"
 import { AlertCircle, ArrowLeft, Building, CheckCircle, Home, Loader2, MapPin, User, Users } from "lucide-react"
 import { useWorkspaceCreation } from "@/hooks/use-workspace-creation"
+import { createClient } from "@supabase/supabase-js"
+
+// Create Supabase client
+const createSupabaseClient = () => {
+  const supabaseUrl = "https://ylpfxtdzizqrzhtxwelk.supabase.co"
+  const supabaseAnonKey =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlscGZ4dGR6aXpxcnpodHh3ZWxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNjI1MDgsImV4cCI6MjA2MjgzODUwOH0.Gv623QSJLOZwYrPBhyOkw9Vk-kzrH4PI6qn125gD1Tw"
+  return createClient(supabaseUrl, supabaseAnonKey)
+}
 
 type NamingType = "property" | "client" | ""
 type ClientType = "Buyer" | "Seller" | ""
@@ -115,8 +124,37 @@ export function NewWorkspaceModal({ open, onOpenChange }: NewWorkspaceModalProps
     setErrors({})
 
     try {
-      // Simulate API call to create workspace
-      await new Promise((resolve) => setTimeout(resolve, 800))
+      // Create a workspace ID
+      const workspaceId = `WS-${Date.now().toString(36)}`
+
+      // Get the Supabase client
+      const supabase = createSupabaseClient()
+
+      // Get the current user (if authenticated)
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      // Create the workspace data
+      const workspaceData = {
+        id: workspaceId,
+        name: propertyAddress,
+        address: propertyAddress,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        status: "active",
+        type: "property",
+        user_id: user?.id || "anonymous",
+        stage: "nurturing",
+      }
+
+      // Insert the workspace into Supabase
+      const { error } = await supabase.from("workspaces").insert(workspaceData)
+
+      if (error) {
+        console.error("Error saving workspace:", error)
+        throw new Error(error.message)
+      }
 
       // Show success message
       setSuccessMessage(`Workspace "${propertyAddress}" created successfully!`)
@@ -131,6 +169,7 @@ export function NewWorkspaceModal({ open, onOpenChange }: NewWorkspaceModalProps
         })
       }, 1500)
     } catch (error) {
+      console.error("Error:", error)
       setErrors({ submit: "Failed to create workspace. Please try again." })
     } finally {
       setIsSubmitting(false)

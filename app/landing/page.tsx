@@ -75,12 +75,22 @@ export default function LandingPage() {
       {/* Header */}
       <header className="w-full border-b border-white/10 bg-purple-950/70 backdrop-blur-md sticky top-0 z-50">
         <div className="container flex h-16 items-center justify-between py-4">
-          <div className="relative h-16 w-auto">
-            <img
-              src="/logo_font.png"
-              alt="Dealsmate.io Logo"
-              className="absolute h-32 w-auto object-contain -top-8 left-0"
-            />
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-purple-200 hover:text-white hover:bg-purple-800"
+              onClick={() => router.push("/dashboard")}
+            >
+              Test Dashboard
+            </Button>
+            <div className="relative h-16 w-auto">
+              <img
+                src="/logo_font.png"
+                alt="Dealsmate.io Logo"
+                className="absolute h-32 w-auto object-contain -top-8 left-0"
+              />
+            </div>
           </div>
           <div className="hidden md:flex md:items-center md:space-x-6">
             <Link href="#features" className="text-sm font-medium text-purple-200 hover:text-white transition-colors">
