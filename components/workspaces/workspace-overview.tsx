@@ -51,8 +51,6 @@ export function WorkspaceOverview({ workspaceId }: WorkspaceOverviewProps) {
   const workspaceParties = useWorkspaceParties()
   const [buyers, setBuyers] = useState<WorkspaceParty[]>([])
   const [sellers, setSellers] = useState<WorkspaceParty[]>([])
-  const [templateDialogOpen, setTemplateDialogOpen] = useState(false)
-  const [selectedTemplate, setSelectedTemplate] = useState("team")
   const [workspace, setWorkspace] = useState({
     id: workspaceId,
     name: "",
@@ -71,6 +69,7 @@ export function WorkspaceOverview({ workspaceId }: WorkspaceOverviewProps) {
     prequalifiedAmount: "",
     parties: [] as Party[],
   })
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false)
 
   // Load workspace and parties from sessionStorage
   useEffect(() => {
@@ -162,12 +161,6 @@ export function WorkspaceOverview({ workspaceId }: WorkspaceOverviewProps) {
 
   // Empty suggestions array
   const talosSuggestions: any[] = []
-
-  const handleApplyTemplate = () => {
-    // Logic to apply the selected template
-    console.log(`Applying ${selectedTemplate} template`)
-    setTemplateDialogOpen(false)
-  }
 
   return (
     <div className="grid gap-6 md:grid-cols-3">
@@ -552,48 +545,42 @@ export function WorkspaceOverview({ workspaceId }: WorkspaceOverviewProps) {
               <FileText className="h-4 w-4" />
               Apply Template(s)
             </Button>
+
+            <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Apply Templates</DialogTitle>
+                  <DialogDescription>Select a template type to apply to this workspace.</DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                  <RadioGroup defaultValue="team" className="space-y-3">
+                    <div className="flex items-start space-x-3 space-y-0">
+                      <RadioGroupItem value="team" id="team" />
+                      <div className="grid gap-1.5 leading-none">
+                        <Label htmlFor="team">Team Milestones</Label>
+                        <p className="text-sm text-muted-foreground">Standard milestones used by your team</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-3 space-y-0">
+                      <RadioGroupItem value="suggested" id="suggested" />
+                      <div className="grid gap-1.5 leading-none">
+                        <Label htmlFor="suggested">Suggested Milestones</Label>
+                        <p className="text-sm text-muted-foreground">AI-suggested milestones based on workspace type</p>
+                      </div>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setTemplateDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={() => setTemplateDialogOpen(false)}>Apply Selected Template</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </CardContent>
         </Card>
       </div>
-
-      {/* Template Dialog */}
-      <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Apply Templates</DialogTitle>
-            <DialogDescription>Select a template type to apply to this workspace.</DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <RadioGroup
-              defaultValue="team"
-              className="space-y-3"
-              onValueChange={setSelectedTemplate}
-              value={selectedTemplate}
-            >
-              <div className="flex items-start space-x-3 space-y-0">
-                <RadioGroupItem value="team" id="team" />
-                <div className="grid gap-1.5 leading-none">
-                  <Label htmlFor="team">Team Milestones</Label>
-                  <p className="text-sm text-muted-foreground">Standard milestones used by your team</p>
-                </div>
-              </div>
-              <div className="flex items-start space-x-3 space-y-0">
-                <RadioGroupItem value="suggested" id="suggested" />
-                <div className="grid gap-1.5 leading-none">
-                  <Label htmlFor="suggested">Suggested Milestones</Label>
-                  <p className="text-sm text-muted-foreground">AI-suggested milestones based on workspace type</p>
-                </div>
-              </div>
-            </RadioGroup>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setTemplateDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleApplyTemplate}>Apply Selected Template</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }
