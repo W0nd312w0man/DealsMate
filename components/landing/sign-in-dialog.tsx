@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { Mail, Lock, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { createClient } from "@supabase/supabase-js"
 import {
   Dialog,
   DialogContent,
@@ -15,6 +16,12 @@ import {
   DialogDescription,
   DialogClose,
 } from "@/components/ui/dialog"
+
+// Initialize Supabase client with placeholder values
+// Replace these with your actual values in production
+const supabaseUrl = "https://ylpfxtdzizqrzhtxwelk.supabase.co"
+const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlscGZ4dGR6aXpxcnpodHh3ZWxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNjI1MDgsImV4cCI6MjA2MjgzODUwOH0.Gv623QSJLOZwYrPBhyOkw9Vk-kzrH4PI6qn125gD1Tw"
+const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 interface SignInDialogProps {
   open: boolean
@@ -31,8 +38,25 @@ export function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
     router.push("/dashboard")
   }
 
-  const handleGoogleSignIn = () => {
-    router.push("/dashboard")
+  const handleGoogleSignIn = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: window.location.origin + "/auth/callback",
+        },
+      })
+
+      if (error) {
+        console.error("Error signing in with Google:", error.message)
+      }
+
+      // The user will be redirected to Google for authentication,
+      // and then back to the redirectTo URL specified above.
+      // We don't need to manually redirect here as Supabase handles it.
+    } catch (error) {
+      console.error("Unexpected error during Google sign-in:", error)
+    }
   }
 
   return (
@@ -116,3 +140,27 @@ export function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
     </Dialog>
   )
 }
+
+// Note: You would need to create a route handler at /auth/callback
+// that would handle the OAuth callback and redirect to the dashboard
+// Example implementation would be:
+//
+// // app/auth/callback/route.ts
+// import { createClient } from '@supabase/supabase-js'
+// import { NextResponse } from 'next/server'
+//
+// export async function GET(request) {
+//   const requestUrl = new URL(request.url)
+//   const code = requestUrl.searchParams.get('code')
+//
+//   if (code) {
+//     const supabaseUrl = 'YOUR_SUPABASE_URL'
+//     const supabaseAnonKey = 'YOUR_SUPABASE_ANON_KEY'
+//     const supabase = createClient(supabaseUrl, supabaseAnonKey)
+//
+//     await supabase.auth.exchangeCodeForSession(code)
+//     return NextResponse.redirect(new URL('/dashboard', request.url))
+//   }
+//
+//   return NextResponse.redirect(new URL('/', request.url))
+// }
