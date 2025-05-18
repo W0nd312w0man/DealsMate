@@ -63,22 +63,22 @@ export function TalosVoiceAssistant() {
   const { toast } = useToast()
 
   // Mock data from the backend
-  const mockData: ActionGroup[] = [
+  const mockData: ActionGroup[] = const mockData: ActionGroup[] = [
     {
       actions: [
         {
           type: "create_workspace",
           recipient: "verde.jenn@gmail.com",
-          address: "28 Capen St, Windsor, CT 06095",
-          description: "Initiate transaction workspace for offer submission on 28 Capen St, Windsor, CT 06095.",
+          address: "472 Oakwood Lane, Springfield, IL 62704",
+          description: "Initiate transaction workspace for offer submission on 472 Oakwood Lane, Springfield, IL 62704.",
           document_data: {
             has_attachments: true,
             suggested_fields: {
               document_type: "Real Estate Purchase Contract",
-              property_address: "28 Capen St, Windsor, CT 06095",
+              property_address: "472 Oakwood Lane, Springfield, IL 62704",
               offer_amount: "$371,000.00",
-              buyer_name: "Nicholas LaChance",
-              seller_name: "Redekas Properties, LLC",
+              buyer_name: "Ethan Caldwell",
+              seller_name: "Bright Horizon Realty",
               title_company: null,
             },
           },
@@ -90,16 +90,16 @@ export function TalosVoiceAssistant() {
         {
           type: "create_workspace",
           recipient: "lanesammy61@gmail.com",
-          address: "73 Kent Cornwall Rd, Kent, CT 06757",
-          description: "Initiate transaction workspace for accepted offer on 73 Kent Cornwall Rd, Kent, CT 06757.",
+          address: "135 Maple Drive, Burlington, VT 05401",
+          description: "Initiate transaction workspace for accepted offer on 135 Maple Drive, Burlington, VT 05401.",
           document_data: {
             has_attachments: true,
             suggested_fields: {
               document_type: "Real Estate Purchase Contract",
-              property_address: "73 Kent Cornwall Rd, Kent, CT 06757",
+              property_address: "135 Maple Drive, Burlington, VT 05401",
               offer_amount: "$381,000.00",
-              buyer_name: "Jason Drozd",
-              seller_name: "Colleen Mcgrath",
+              buyer_name: "Sophie Bennett",
+              seller_name: "Lila Thornton",
               title_company: null,
             },
           },
@@ -120,13 +120,13 @@ export function TalosVoiceAssistant() {
         {
           type: "create_event",
           recipient: "peppercorncottage.la@gmail.com",
-          address: "2458 Salzburge Street, Whittier, CA 90601",
+          address: "789 Cedar Avenue, Boise, ID 83702",
           date: "2025-05-22",
-          description: "Inspection scheduled for 2458 Salzburge Street, Whittier, CA 90601.",
+          description: "Inspection scheduled for 789 Cedar Avenue, Boise, ID 83702.",
         },
       ],
     },
-  ]
+  ];
 
   // Initialize actions from sessionStorage or mock data
   useEffect(() => {
