@@ -39,10 +39,16 @@ export default function GmailAuthSuccessPage() {
           try {
             console.log("Fetching user profile...")
             const userProfile = await GmailService.getUserProfile(accessToken)
+
+            // Store user info in sessionStorage
             sessionStorage.setItem("gmail_user_email", userProfile.email)
-            sessionStorage.setItem("gmail_user_name", userProfile.name)
+            sessionStorage.setItem("gmail_user_name", userProfile.name || userProfile.email.split("@")[0])
 
             console.log("User profile stored:", userProfile)
+
+            // Force a window reload to ensure all components pick up the new user info
+            window.location.href = "/dashboard"
+            return // Stop execution after redirect
           } catch (error) {
             console.error("Error fetching user profile:", error)
           }

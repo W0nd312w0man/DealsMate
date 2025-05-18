@@ -20,13 +20,25 @@ export function UserNav() {
   const router = useRouter()
   const [gmailUser, setGmailUser] = useState<{ email?: string; name?: string } | null>(null)
 
-  // Check for Gmail user info on component mount
+  // Check for Gmail user info on component mount and when window gains focus
   useEffect(() => {
-    const email = sessionStorage.getItem("gmail_user_email")
-    const name = sessionStorage.getItem("gmail_user_name")
+    const checkGmailUser = () => {
+      const email = sessionStorage.getItem("gmail_user_email")
+      const name = sessionStorage.getItem("gmail_user_name")
 
-    if (email) {
-      setGmailUser({ email, name: name || email.split("@")[0] })
+      if (email) {
+        setGmailUser({ email, name: name || email.split("@")[0] })
+      }
+    }
+
+    // Check on mount
+    checkGmailUser()
+
+    // Also check when window gains focus (helps after auth redirect)
+    window.addEventListener("focus", checkGmailUser)
+
+    return () => {
+      window.removeEventListener("focus", checkGmailUser)
     }
   }, [])
 
@@ -70,7 +82,14 @@ export function UserNav() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full ml-4">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={user?.avatar_url || "/bruce-wayne.png"} alt={displayUser?.name || "User"} />
+            <AvatarImage
+              src={
+                displayUser?.email
+                  ? `https://ui-avatars.com/api/?name=${encodeURIComponent(displayUser.name || displayUser.email)}&background=random`
+                  : user?.avatar_url || "/bruce-wayne.png"
+              }
+              alt={displayUser?.name || "User"}
+            />
             <AvatarFallback>{displayUser?.name ? getInitials(displayUser.name) : "U"}</AvatarFallback>
           </Avatar>
         </Button>
@@ -86,6 +105,11 @@ export function UserNav() {
         <DropdownMenuGroup>
           <DropdownMenuItem>Profile</DropdownMenuItem>
           <DropdownMenuItem onClick={() => router.push("/settings")}>Settings</DropdownMenuItem>
+          {gmailUser && (
+            <DropdownMenuItem onClick={() => router.push("/settings?tab=integrations")}>
+              Gmail Settings
+            </DropdownMenuItem>
+          )}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut}>Log out</DropdownMenuItem>
