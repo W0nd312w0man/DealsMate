@@ -44,6 +44,12 @@ export default function GmailAuthSuccessPage() {
             sessionStorage.setItem("gmail_user_email", userProfile.email)
             sessionStorage.setItem("gmail_user_name", userProfile.name || userProfile.email.split("@")[0])
 
+            // Store profile picture if available
+            if (userProfile.picture) {
+              sessionStorage.setItem("gmail_profile_picture", userProfile.picture)
+              console.log("Profile picture stored:", userProfile.picture)
+            }
+
             console.log("User profile stored:", userProfile)
 
             // Force a window reload to ensure all components pick up the new user info

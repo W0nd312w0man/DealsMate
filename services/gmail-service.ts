@@ -2,13 +2,22 @@
 
 import type { EmailCompose } from "@/types/gmail"
 
-// Gmail service with hardcoded credentials
-export const GmailService = {
-  // Google API credentials
-  clientId: "1076146557292-34uhdpoavubdhjs02isk4imnrfcljing.apps.googleusercontent.com",
-  clientSecret: "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",
+// Update the GmailService to ensure it returns the profile picture
 
-  getAuthUrl: (redirectUri: string, state = ""): string => {
+export interface GoogleUserProfile {
+  email: string
+  name?: string
+  picture?: string
+  id?: string
+}
+
+// Gmail service with hardcoded credentials
+export class GmailService {
+  // Google API credentials
+  static clientId = "1076146557292-34uhdpoavubdhjs02isk4imnrfcljing.apps.googleusercontent.com"
+  static clientSecret = "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"
+
+  static getAuthUrl = (redirectUri: string, state = ""): string => {
     const scopes = [
       "https://www.googleapis.com/auth/gmail.readonly",
       "https://www.googleapis.com/auth/gmail.send",
@@ -21,9 +30,9 @@ export const GmailService = {
     }&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(
       scopes,
     )}&access_type=offline&prompt=consent&state=${state}`
-  },
+  }
 
-  exchangeCodeForTokens: async (
+  static exchangeCodeForTokens = async (
     code: string,
     redirectUri: string,
   ): Promise<{ accessToken: string; refreshToken: string; expiryDate: number }> => {
@@ -57,9 +66,9 @@ export const GmailService = {
       refreshToken: data.refresh_token || "placeholder_refresh_token",
       expiryDate: Date.now() + data.expires_in * 1000,
     }
-  },
+  }
 
-  refreshAccessToken: async (refreshToken: string): Promise<{ accessToken: string; expiryDate: number }> => {
+  static refreshAccessToken = async (refreshToken: string): Promise<{ accessToken: string; expiryDate: number }> => {
     const response = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
       headers: {
@@ -82,39 +91,37 @@ export const GmailService = {
       accessToken: data.access_token,
       expiryDate: Date.now() + data.expires_in * 1000,
     }
-  },
+  }
 
-  getUserProfile: async (accessToken: string): Promise<{ email: string; name: string }> => {
-    console.log("Fetching user profile with token:", accessToken.substring(0, 10) + "...")
-
+  static async getUserProfile(accessToken: string): Promise<GoogleUserProfile> {
     try {
-      const response = await fetch("https://www.googleapis.com/gmail/v1/users/me/profile", {
+      const response = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
       })
 
       if (!response.ok) {
-        const errorText = await response.text()
-        console.error(`Failed to get user profile: ${response.status} ${response.statusText}`, errorText)
-        throw new Error(`Failed to get user profile: ${response.statusText}`)
+        throw new Error(`Failed to fetch user profile: ${response.status}`)
       }
 
       const data = await response.json()
-      console.log("User profile fetched successfully:", data)
+      console.log("Google user profile data:", data)
 
       return {
-        email: data.emailAddress,
-        name: data.emailAddress.split("@")[0], // Simple name extraction from email
+        email: data.email,
+        name: data.name,
+        picture: data.picture, // Make sure we're returning the picture URL
+        id: data.id,
       }
     } catch (error) {
-      console.error("Error in getUserProfile:", error)
+      console.error("Error fetching Google user profile:", error)
       throw error
     }
-  },
+  }
 
   // Other Gmail API methods remain the same...
-  listLabels: async (accessToken: string): Promise<any[]> => {
+  static listLabels = async (accessToken: string): Promise<any[]> => {
     const response = await fetch("https://www.googleapis.com/gmail/v1/users/me/labels", {
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -127,9 +134,9 @@ export const GmailService = {
 
     const data = await response.json()
     return data.labels || []
-  },
+  }
 
-  listThreads: async (accessToken: string, query = ""): Promise<{ threads: any[] }> => {
+  static listThreads = async (accessToken: string, query = ""): Promise<{ threads: any[] }> => {
     const url = new URL("https://www.googleapis.com/gmail/v1/users/me/threads")
     if (query) {
       url.searchParams.append("q", query)
@@ -150,9 +157,9 @@ export const GmailService = {
     return {
       threads: data.threads || [],
     }
-  },
+  }
 
-  getThread: async (accessToken: string, threadId: string): Promise<any> => {
+  static getThread = async (accessToken: string, threadId: string): Promise<any> => {
     const response = await fetch(`https://www.googleapis.com/gmail/v1/users/me/threads/${threadId}`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -164,9 +171,9 @@ export const GmailService = {
     }
 
     return await response.json()
-  },
+  }
 
-  getMessage: async (accessToken: string, messageId: string): Promise<any> => {
+  static getMessage = async (accessToken: string, messageId: string): Promise<any> => {
     const response = await fetch(`https://www.googleapis.com/gmail/v1/users/me/messages/${messageId}`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -178,15 +185,15 @@ export const GmailService = {
     }
 
     return await response.json()
-  },
+  }
 
-  sendEmail: async (accessToken: string, email: EmailCompose): Promise<string> => {
+  static sendEmail = async (accessToken: string, email: EmailCompose): Promise<string> => {
     // Implementation for sending emails
     // This would require creating a MIME message and using the gmail.users.messages.send endpoint
     return "mock-message-id" // Placeholder
-  },
+  }
 
-  markAsRead: async (accessToken: string, messageId: string): Promise<void> => {
+  static markAsRead = async (accessToken: string, messageId: string): Promise<void> => {
     await fetch(`https://www.googleapis.com/gmail/v1/users/me/messages/${messageId}/modify`, {
       method: "POST",
       headers: {
@@ -197,9 +204,9 @@ export const GmailService = {
         removeLabelIds: ["UNREAD"],
       }),
     })
-  },
+  }
 
-  markAsUnread: async (accessToken: string, messageId: string): Promise<void> => {
+  static markAsUnread = async (accessToken: string, messageId: string): Promise<void> => {
     await fetch(`https://www.googleapis.com/gmail/v1/users/me/messages/${messageId}/modify`, {
       method: "POST",
       headers: {
@@ -210,9 +217,9 @@ export const GmailService = {
         addLabelIds: ["UNREAD"],
       }),
     })
-  },
+  }
 
-  toggleStar: async (accessToken: string, messageId: string, starred: boolean): Promise<void> => {
+  static toggleStar = async (accessToken: string, messageId: string, starred: boolean): Promise<void> => {
     await fetch(`https://www.googleapis.com/gmail/v1/users/me/messages/${messageId}/modify`, {
       method: "POST",
       headers: {
@@ -224,18 +231,18 @@ export const GmailService = {
         removeLabelIds: !starred ? ["STARRED"] : [],
       }),
     })
-  },
+  }
 
-  trashMessage: async (accessToken: string, messageId: string): Promise<void> => {
+  static trashMessage = async (accessToken: string, messageId: string): Promise<void> => {
     await fetch(`https://www.googleapis.com/gmail/v1/users/me/messages/${messageId}/trash`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
     })
-  },
+  }
 
-  getAttachment: async (accessToken: string, messageId: string, attachmentId: string): Promise<string> => {
+  static getAttachment = async (accessToken: string, messageId: string, attachmentId: string): Promise<string> => {
     const response = await fetch(
       `https://www.googleapis.com/gmail/v1/users/me/messages/${messageId}/attachments/${attachmentId}`,
       {
@@ -251,9 +258,9 @@ export const GmailService = {
 
     const data = await response.json()
     return data.data // Base64 encoded attachment data
-  },
+  }
 
-  getUnreadCount: async (accessToken: string): Promise<number> => {
+  static getUnreadCount = async (accessToken: string): Promise<number> => {
     const response = await fetch("https://www.googleapis.com/gmail/v1/users/me/messages?q=is:unread&maxResults=1", {
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -266,5 +273,5 @@ export const GmailService = {
 
     const data = await response.json()
     return data.resultSizeEstimate || 0
-  },
+  }
 }
