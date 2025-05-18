@@ -20,7 +20,8 @@ import {
 // Initialize Supabase client with placeholder values
 // Replace these with your actual values in production
 const supabaseUrl = "https://ylpfxtdzizqrzhtxwelk.supabase.co"
-const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlscGZ4dGR6aXpxcnpodHh3ZWxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNjI1MDgsImV4cCI6MjA2MjgzODUwOH0.Gv623QSJLOZwYrPBhyOkw9Vk-kzrH4PI6qn125gD1Tw"
+const supabaseAnonKey =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlscGZ4dGR6aXpxcnpodHh3ZWxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNjI1MDgsImV4cCI6MjA2MjgzODUwOH0.Gv623QSJLOZwYrPBhyOkw9Vk-kzrH4PI6qn125gD1Tw"
 const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 interface SignInDialogProps {
@@ -49,11 +50,13 @@ export function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
 
       if (error) {
         console.error("Error signing in with Google:", error.message)
+        return
       }
 
-      // The user will be redirected to Google for authentication,
-      // and then back to the redirectTo URL specified above.
-      // We don't need to manually redirect here as Supabase handles it.
+      // Important: You need to redirect to the URL returned by Supabase
+      if (data?.url) {
+        window.location.href = data.url
+      }
     } catch (error) {
       console.error("Unexpected error during Google sign-in:", error)
     }
