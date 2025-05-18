@@ -4,11 +4,13 @@ import { useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
 import { GmailService } from "@/services/gmail-service"
+import { useAuth } from "@/hooks/use-auth"
 
 export default function GmailAuthSuccessPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
+  const { restoreUserMetadata } = useAuth()
 
   useEffect(() => {
     const storeTokensAndRedirect = async () => {
@@ -40,31 +42,29 @@ export default function GmailAuthSuccessPage() {
             console.log("Fetching user profile...")
             const userProfile = await GmailService.getUserProfile(accessToken)
 
-            // Store user info in sessionStorage
+            // Store Gmail user info in sessionStorage
             sessionStorage.setItem("gmail_user_email", userProfile.email)
             sessionStorage.setItem("gmail_user_name", userProfile.name || userProfile.email.split("@")[0])
 
-            // Store profile picture if available
-            if (userProfile.picture) {
-              sessionStorage.setItem("gmail_profile_picture", userProfile.picture)
-              console.log("Profile picture stored:", userProfile.picture)
-            }
+            console.log("Gmail user profile stored:", userProfile)
 
-            console.log("User profile stored:", userProfile)
+            // Restore the original Supabase user metadata
+            restoreUserMetadata()
+            console.log("Restored Supabase user metadata")
 
-            // Force a window reload to ensure all components pick up the new user info
+            // Show success toast
+            toast({
+              title: "Gmail Connected",
+              description: "Your Gmail account has been successfully connected.",
+              variant: "default",
+            })
+
+            // Force a window reload to ensure all components pick up the restored user info
             window.location.href = "/dashboard"
             return // Stop execution after redirect
           } catch (error) {
             console.error("Error fetching user profile:", error)
           }
-
-          // Show success toast
-          toast({
-            title: "Gmail Connected",
-            description: "Your Gmail account has been successfully connected.",
-            variant: "default",
-          })
 
           // Redirect to dashboard
           router.push("/dashboard")
@@ -92,7 +92,7 @@ export default function GmailAuthSuccessPage() {
     }
 
     storeTokensAndRedirect()
-  }, [router, searchParams, toast])
+  }, [router, searchParams, toast, restoreUserMetadata])
 
   return (
     <div className="flex items-center justify-center min-h-screen">

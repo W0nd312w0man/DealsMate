@@ -42,8 +42,37 @@ export function DashboardHeader() {
       .substring(0, 2)
   }
 
-  // Use Gmail user info if available, otherwise fall back to regular user
-  const displayUser = gmailUser || user
+  // Get user name from Supabase metadata if available
+  const getUserName = () => {
+    // First try to get from Supabase metadata in sessionStorage
+    const supabaseName = sessionStorage.getItem("supabase_user_name")
+    if (supabaseName) return supabaseName
+
+    // Then try to get from user object
+    if (user?.name && user.name !== "User") return user.name
+
+    // Then try to get from Gmail user
+    if (gmailUser?.name) return gmailUser.name
+
+    // Default fallback
+    return "User"
+  }
+
+  // Get user avatar from Supabase metadata if available
+  const getUserAvatar = () => {
+    // First try to get from Supabase metadata in sessionStorage
+    const supabaseAvatar = sessionStorage.getItem("supabase_user_avatar")
+    if (supabaseAvatar) return supabaseAvatar
+
+    // Then try to get from user object
+    if (user?.avatar_url) return user.avatar_url
+
+    // Default fallback
+    return undefined
+  }
+
+  const userName = getUserName()
+  const userAvatar = getUserAvatar()
 
   return (
     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -59,14 +88,14 @@ export function DashboardHeader() {
         ) : (
           <>
             <Avatar className="h-12 w-12 border-2 border-purple-200">
-              <AvatarImage alt={user?.name || "User"} />
-              <AvatarFallback>{user ? getInitials(user.name) : "U"}</AvatarFallback>
+              <AvatarImage src={userAvatar || "/placeholder.svg"} alt={userName} />
+              <AvatarFallback>{getInitials(userName)}</AvatarFallback>
             </Avatar>
             <div>
               <h1 className="text-2xl font-bold">Dashboard</h1>
               <p className="text-muted-foreground">
-                Welcome to your dashboard, {displayUser?.name || "User"}
-                {displayUser?.email && displayUser.email !== displayUser.name ? ` (${displayUser.email})` : ""}
+                Welcome to your dashboard, {userName}
+                {user?.email && user.email !== userName ? ` (${user.email})` : ""}
               </p>
             </div>
           </>

@@ -20,6 +20,8 @@ interface AuthContextType {
   isAuthenticated: boolean
   signIn: (credentials: { email: string; password: string }) => Promise<void>
   signOut: () => Promise<void>
+  saveUserMetadata: () => Promise<void>
+  restoreUserMetadata: () => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -36,6 +38,65 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const supabase = createSupabaseClient()
+
+  // Save user metadata to sessionStorage
+  const saveUserMetadata = async () => {
+    try {
+      const {
+        data: { user: supabaseUser },
+      } = await supabase.auth.getUser()
+
+      if (supabaseUser && supabaseUser.user_metadata) {
+        // Store the complete user metadata
+        sessionStorage.setItem("supabase_user_metadata", JSON.stringify(supabaseUser.user_metadata))
+
+        // Store individual fields for easier access
+        if (supabaseUser.user_metadata.name || supabaseUser.user_metadata.full_name) {
+          sessionStorage.setItem(
+            "supabase_user_name",
+            supabaseUser.user_metadata.name || supabaseUser.user_metadata.full_name,
+          )
+        }
+
+        if (supabaseUser.email) {
+          sessionStorage.setItem("supabase_user_email", supabaseUser.email)
+        }
+
+        if (supabaseUser.user_metadata.avatar_url || supabaseUser.user_metadata.picture) {
+          sessionStorage.setItem(
+            "supabase_user_avatar",
+            supabaseUser.user_metadata.avatar_url || supabaseUser.user_metadata.picture,
+          )
+        }
+
+        console.log("Saved Supabase user metadata to sessionStorage", supabaseUser.user_metadata)
+      }
+    } catch (error) {
+      console.error("Error saving user metadata:", error)
+    }
+  }
+
+  // Restore user metadata from sessionStorage
+  const restoreUserMetadata = () => {
+    try {
+      const metadataStr = sessionStorage.getItem("supabase_user_metadata")
+      const name = sessionStorage.getItem("supabase_user_name")
+      const email = sessionStorage.getItem("supabase_user_email")
+      const avatar = sessionStorage.getItem("supabase_user_avatar")
+
+      if (name && email) {
+        setUser({
+          id: user?.id || "restored-id",
+          name: name,
+          email: email,
+          avatar_url: avatar || undefined,
+        })
+        console.log("Restored user metadata from sessionStorage", { name, email, avatar })
+      }
+    } catch (error) {
+      console.error("Error restoring user metadata:", error)
+    }
+  }
 
   useEffect(() => {
     // Check for existing session
@@ -62,6 +123,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             email: userData.email || "",
             avatar_url: userData.user_metadata?.avatar_url || userData.user_metadata?.picture,
           })
+
+          // Save metadata to sessionStorage for later use
+          await saveUserMetadata()
         } else {
           setUser(null)
         }
@@ -85,6 +149,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           email: userData.email || "",
           avatar_url: userData.user_metadata?.avatar_url || userData.user_metadata?.picture,
         })
+
+        // Save metadata when auth state changes
+        saveUserMetadata()
       } else {
         setUser(null)
       }
@@ -124,6 +191,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await supabase.auth.signOut()
       setUser(null)
+
+      // Clear sessionStorage
+      sessionStorage.removeItem("supabase_user_metadata")
+      sessionStorage.removeItem("supabase_user_name")
+      sessionStorage.removeItem("supabase_user_email")
+      sessionStorage.removeItem("supabase_user_avatar")
     } catch (error) {
       console.error("Sign out error:", error)
     } finally {
@@ -139,6 +212,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAuthenticated: !!user,
         signIn,
         signOut,
+        saveUserMetadata,
+        restoreUserMetadata,
       }}
     >
       {children}

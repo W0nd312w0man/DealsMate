@@ -64,8 +64,54 @@ export function UserNav() {
     router.push("/landing")
   }
 
-  // Use Gmail user info if available, otherwise fall back to regular user
-  const displayUser = gmailUser || user
+  // Get user name from Supabase metadata if available
+  const getUserName = () => {
+    // First try to get from Supabase metadata in sessionStorage
+    const supabaseName = sessionStorage.getItem("supabase_user_name")
+    if (supabaseName) return supabaseName
+
+    // Then try to get from user object
+    if (user?.name && user.name !== "User") return user.name
+
+    // Then try to get from Gmail user
+    if (gmailUser?.name) return gmailUser.name
+
+    // Default fallback
+    return "User"
+  }
+
+  // Get user email from Supabase metadata if available
+  const getUserEmail = () => {
+    // First try to get from Supabase metadata in sessionStorage
+    const supabaseEmail = sessionStorage.getItem("supabase_user_email")
+    if (supabaseEmail) return supabaseEmail
+
+    // Then try to get from user object
+    if (user?.email) return user.email
+
+    // Then try to get from Gmail user
+    if (gmailUser?.email) return gmailUser.email
+
+    // Default fallback
+    return "user@example.com"
+  }
+
+  // Get user avatar from Supabase metadata if available
+  const getUserAvatar = () => {
+    // First try to get from Supabase metadata in sessionStorage
+    const supabaseAvatar = sessionStorage.getItem("supabase_user_avatar")
+    if (supabaseAvatar) return supabaseAvatar
+
+    // Then try to get from user object
+    if (user?.avatar_url) return user.avatar_url
+
+    // Default fallback
+    return undefined
+  }
+
+  const userName = getUserName()
+  const userEmail = getUserEmail()
+  const userAvatar = getUserAvatar()
 
   if (isLoading) {
     return (
@@ -82,16 +128,16 @@ export function UserNav() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full ml-4">
           <Avatar className="h-8 w-8">
-            <AvatarImage alt={user?.name || "User"} />
-            <AvatarFallback>{user ? getInitials(user.name) : "U"}</AvatarFallback>
+            <AvatarImage src={userAvatar || "/placeholder.svg"} alt={userName} />
+            <AvatarFallback>{getInitials(userName)}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{displayUser?.name || "User"}</p>
-            <p className="text-xs leading-none text-muted-foreground">{displayUser?.email || "user@example.com"}</p>
+            <p className="text-sm font-medium leading-none">{userName}</p>
+            <p className="text-xs leading-none text-muted-foreground">{userEmail}</p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
