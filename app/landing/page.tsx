@@ -8,8 +8,8 @@ import { createClient } from "@supabase/supabase-js"
 
 // Initialize Supabase client with placeholders for environment variables
 // Replace these placeholders with your actual Supabase URL and anon key
-const supabaseUrl = "https://your-project-ref.supabase.co"
-const supabaseAnonKey = "your-supabase-anon-key"
+const supabaseUrl = "https://ylpfxtdzizqrzhtxwelk.supabase.co"
+const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlscGZ4dGR6aXpxcnpodHh3ZWxrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNjI1MDgsImV4cCI6MjA2MjgzODUwOH0.Gv623QSJLOZwYrPBhyOkw9Vk-kzrH4PI6qn125gD1Tw"
 
 // Only create the client on the client side
 let supabase: ReturnType<typeof createClient> | null = null
