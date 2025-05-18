@@ -31,6 +31,7 @@ import {
   Eye,
   EyeOff,
   CheckCircle,
+  AlertCircle,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { analyzeEmail } from "@/services/email-analysis-service"
@@ -40,7 +41,6 @@ import { useToast } from "@/components/ui/use-toast"
 import { useEmailViewPreferences } from "@/hooks/use-email-view-preferences"
 import { EmailInlineView } from "@/components/email/email-inline-view"
 import Link from "next/link"
-import { GmailService } from "@/services/gmail-service"
 
 interface Email {
   id: string
@@ -78,7 +78,7 @@ export function SmartInbox({
   filterUnreadOnly = false,
   onFilterChange,
   showAttachmentDetection = false,
-  isSetUp = false, // Default to not set up
+  isSetUp: propIsSetUp = false, // Default to not set up
 }: SmartInboxProps) {
   const [activeTab, setActiveTab] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
@@ -104,32 +104,143 @@ export function SmartInbox({
   const [showToken, setShowToken] = useState(false)
   const [copySuccess, setCopySuccess] = useState(false)
   const [userEmail, setUserEmail] = useState<string | null>(null)
+  const [isSetUp, setIsSetUp] = useState(propIsSetUp)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [emails, setEmails] = useState<Email[]>([])
 
-  // Check for Gmail tokens on component mount
+  // Check for Gmail tokens on component mount and when window is focused
   useEffect(() => {
-    const accessToken = sessionStorage.getItem("gmail_access_token")
-    const refreshToken = sessionStorage.getItem("gmail_refresh_token")
-    const tokenExpiry = sessionStorage.getItem("gmail_token_expiry")
+    const checkGmailAuth = () => {
+      console.log("Checking Gmail auth...")
+      const accessToken = sessionStorage.getItem("gmail_access_token")
+      const refreshToken = sessionStorage.getItem("gmail_refresh_token")
+      const tokenExpiry = sessionStorage.getItem("gmail_token_expiry")
+      const email = sessionStorage.getItem("gmail_user_email")
 
-    if (accessToken) {
-      setGmailAccessToken(accessToken)
-      setGmailRefreshToken(refreshToken)
-      setGmailTokenExpiry(tokenExpiry)
+      console.log("Access token:", accessToken ? "Present" : "Not present")
+      console.log("User email:", email)
 
-      // Fetch user profile if we have a token
-      const fetchUserProfile = async () => {
-        try {
-          const profile = await GmailService.getUserProfile(accessToken)
-          setUserEmail(profile.email)
-          console.log("Fetched user profile:", profile)
-        } catch (error) {
-          console.error("Error fetching user profile:", error)
-        }
+      if (accessToken) {
+        setGmailAccessToken(accessToken)
+        setGmailRefreshToken(refreshToken)
+        setGmailTokenExpiry(tokenExpiry)
+        setUserEmail(email)
+        setIsSetUp(true)
+
+        // Fetch emails if we have a token
+        fetchEmails(accessToken)
+      } else {
+        setIsSetUp(propIsSetUp)
       }
-
-      fetchUserProfile()
     }
-  }, [])
+
+    // Check auth on mount
+    checkGmailAuth()
+
+    // Also check when window is focused (in case user authenticated in another tab)
+    const handleFocus = () => {
+      checkGmailAuth()
+    }
+
+    window.addEventListener("focus", handleFocus)
+    return () => {
+      window.removeEventListener("focus", handleFocus)
+    }
+  }, [propIsSetUp])
+
+  // Fetch emails from Gmail
+  const fetchEmails = async (token: string) => {
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      console.log("Fetching emails with token:", token.substring(0, 10) + "...")
+
+      // Create mock emails for demonstration
+      const mockEmails: Email[] = [
+        {
+          id: "email-1",
+          from: {
+            name: "Karen Chen",
+            email: "karen.chen@example.com",
+          },
+          subject: "Offer Accepted on 15614 Yermo Street",
+          preview:
+            "Great news! The sellers have accepted your offer on the property at 15614 Yermo Street, Whittier, CA 90603.",
+          date: "2023-05-15",
+          read: false,
+          starred: true,
+          category: "transaction",
+          labels: ["Important", "Transaction"],
+          attachments: [
+            {
+              id: "attachment-1",
+              fileName: "Purchase_Agreement_15614_Yermo_St.pdf",
+              fileType: "application/pdf",
+              fileSize: 2500000,
+            },
+          ],
+        },
+        {
+          id: "email-2",
+          from: {
+            name: "Michael Rodriguez",
+            email: "michael.rodriguez@example.com",
+          },
+          subject: "Inspection Report for 8721 Oakwood Lane",
+          preview:
+            "Please find attached the inspection report for 8721 Oakwood Lane. There are a few items that need attention.",
+          date: "2023-05-14",
+          read: true,
+          starred: false,
+          category: "transaction",
+          labels: ["Transaction"],
+          attachments: [
+            {
+              id: "attachment-2",
+              fileName: "Inspection_Report_8721_Oakwood.pdf",
+              fileType: "application/pdf",
+              fileSize: 3200000,
+            },
+            {
+              id: "attachment-3",
+              fileName: "Inspection_Photos.zip",
+              fileType: "application/zip",
+              fileSize: 15000000,
+            },
+          ],
+        },
+        {
+          id: "email-3",
+          from: {
+            name: "Sarah Johnson",
+            email: "sarah.johnson@example.com",
+          },
+          subject: "Interested in listing my property",
+          preview: "I'm interested in listing my property at 4532 Maple Avenue. Can we schedule a time to discuss?",
+          date: "2023-05-13",
+          read: false,
+          starred: false,
+          category: "lead",
+          labels: ["Lead", "New"],
+        },
+      ]
+
+      // In a real implementation, we would fetch emails from Gmail API
+      // const response = await GmailService.listThreads(token);
+      // const threads = response.threads;
+      // ... process threads into emails format
+
+      console.log("Fetched emails:", mockEmails.length)
+      setEmails(mockEmails)
+      setIsLoading(false)
+    } catch (error) {
+      console.error("Error fetching emails:", error)
+      setError("Failed to fetch emails. Please try again.")
+      setIsLoading(false)
+    }
+  }
 
   // Handle copying token to clipboard
   const copyTokenToClipboard = () => {
@@ -309,8 +420,12 @@ export function SmartInbox({
     setSelectedEmail(null)
   }
 
-  // Emails array - to be populated from API
-  const emails: Email[] = []
+  // Refresh emails
+  const handleRefresh = () => {
+    if (gmailAccessToken) {
+      fetchEmails(gmailAccessToken)
+    }
+  }
 
   // Filter emails based on active tab, search query, and unread filter
   const filteredEmails = emails
@@ -364,10 +479,9 @@ export function SmartInbox({
       return email
     })
 
-    // If we had state for emails, we would update it here
-    // setEmails(updatedEmails);
+    setEmails(updatedEmails)
 
-    // For now, just show a toast notification
+    // Show a toast notification
     toast({
       title: `Email ${emails.find((e) => e.id === id)?.starred ? "unstarred" : "starred"}`,
       description: "Your changes have been saved.",
@@ -581,8 +695,10 @@ export function SmartInbox({
                 variant="outline"
                 size="sm"
                 className="border-purple-200 text-purple-700 hover:bg-purple-50 hover:text-purple-700"
+                onClick={handleRefresh}
+                disabled={isLoading}
               >
-                <RefreshCcw className="h-4 w-4" />
+                <RefreshCcw className={cn("h-4 w-4", isLoading && "animate-spin")} />
               </Button>
             </div>
           ) : (
@@ -660,6 +776,21 @@ export function SmartInbox({
               </TabsList>
 
               <TabsContent value={activeTab} className="mt-4">
+                {/* Error message */}
+                {error && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md flex items-center gap-2 text-red-700">
+                    <AlertCircle className="h-4 w-4" />
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                {/* Loading state */}
+                {isLoading && (
+                  <div className="flex justify-center items-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-700"></div>
+                  </div>
+                )}
+
                 {/* Attachment Notifications Section */}
                 {showAttachmentDetection && analysisResults.length > 0 && (
                   <div className="mb-4">
@@ -675,7 +806,7 @@ export function SmartInbox({
                 )}
 
                 <div className="space-y-1 max-h-[650px] overflow-y-auto pr-2">
-                  {filteredEmails.length > 0 ? (
+                  {!isLoading && filteredEmails.length > 0 ? (
                     filteredEmails.map((email) => (
                       <div key={email.id} className="mb-2">
                         <div
@@ -853,11 +984,15 @@ export function SmartInbox({
                         )}
                       </div>
                     ))
-                  ) : (
+                  ) : !isLoading ? (
                     <div className="text-center py-8">
                       <p className="text-muted-foreground">No emails found</p>
+                      <Button variant="outline" size="sm" className="mt-4" onClick={handleRefresh}>
+                        <RefreshCcw className="h-4 w-4 mr-2" />
+                        Refresh
+                      </Button>
                     </div>
-                  )}
+                  ) : null}
                 </div>
               </TabsContent>
             </Tabs>

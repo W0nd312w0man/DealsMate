@@ -11,55 +11,75 @@ export default function GmailAuthSuccessPage() {
   const { toast } = useToast()
 
   useEffect(() => {
-    // Get tokens from URL parameters
-    const accessToken = searchParams.get("access_token")
-    const refreshToken = searchParams.get("refresh_token")
-    const expiresIn = searchParams.get("expires_in")
+    const storeTokensAndRedirect = async () => {
+      try {
+        // Get tokens from URL parameters
+        const accessToken = searchParams.get("access_token")
+        const refreshToken = searchParams.get("refresh_token")
+        const expiresIn = searchParams.get("expires_in")
 
-    if (accessToken && refreshToken && expiresIn) {
-      // Calculate expiry time
-      const expiryTime = Date.now() + Number.parseInt(expiresIn) * 1000
+        console.log("Auth success page - tokens received:", {
+          accessToken: accessToken ? "Present" : "Not present",
+          refreshToken: refreshToken ? "Present" : "Not present",
+          expiresIn,
+        })
 
-      // Store tokens in sessionStorage
-      sessionStorage.setItem("gmail_access_token", accessToken)
-      sessionStorage.setItem("gmail_refresh_token", refreshToken)
-      sessionStorage.setItem("gmail_token_expiry", expiryTime.toString())
+        if (accessToken && refreshToken && expiresIn) {
+          // Calculate expiry time
+          const expiryTime = Date.now() + Number.parseInt(expiresIn) * 1000
 
-      // Fetch and store user profile
-      const fetchUserProfile = async () => {
-        try {
-          const userProfile = await GmailService.getUserProfile(accessToken)
-          sessionStorage.setItem("gmail_user_email", userProfile.email)
-          sessionStorage.setItem("gmail_user_name", userProfile.name)
+          // Store tokens in sessionStorage
+          sessionStorage.setItem("gmail_access_token", accessToken)
+          sessionStorage.setItem("gmail_refresh_token", refreshToken)
+          sessionStorage.setItem("gmail_token_expiry", expiryTime.toString())
 
-          console.log("Stored user profile:", userProfile)
-        } catch (error) {
-          console.error("Error fetching user profile:", error)
+          console.log("Tokens stored in sessionStorage")
+
+          // Fetch and store user profile
+          try {
+            console.log("Fetching user profile...")
+            const userProfile = await GmailService.getUserProfile(accessToken)
+            sessionStorage.setItem("gmail_user_email", userProfile.email)
+            sessionStorage.setItem("gmail_user_name", userProfile.name)
+
+            console.log("User profile stored:", userProfile)
+          } catch (error) {
+            console.error("Error fetching user profile:", error)
+          }
+
+          // Show success toast
+          toast({
+            title: "Gmail Connected",
+            description: "Your Gmail account has been successfully connected.",
+            variant: "default",
+          })
+
+          // Redirect to dashboard
+          router.push("/dashboard")
+        } else {
+          console.error("Missing tokens in URL parameters")
+          // Show error toast
+          toast({
+            title: "Connection Failed",
+            description: "Failed to connect your Gmail account. Please try again.",
+            variant: "destructive",
+          })
+
+          // Redirect to settings
+          router.push("/settings?tab=integrations")
         }
+      } catch (error) {
+        console.error("Error in storeTokensAndRedirect:", error)
+        toast({
+          title: "Connection Failed",
+          description: "An error occurred while connecting your Gmail account.",
+          variant: "destructive",
+        })
+        router.push("/settings?tab=integrations")
       }
-
-      fetchUserProfile()
-
-      // Show success toast
-      toast({
-        title: "Gmail Connected",
-        description: "Your Gmail account has been successfully connected.",
-        variant: "default",
-      })
-
-      // Redirect to dashboard
-      router.push("/dashboard")
-    } else {
-      // Show error toast
-      toast({
-        title: "Connection Failed",
-        description: "Failed to connect your Gmail account. Please try again.",
-        variant: "destructive",
-      })
-
-      // Redirect to settings
-      router.push("/settings?tab=integrations")
     }
+
+    storeTokensAndRedirect()
   }, [router, searchParams, toast])
 
   return (

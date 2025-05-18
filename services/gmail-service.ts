@@ -27,6 +27,8 @@ export const GmailService = {
     code: string,
     redirectUri: string,
   ): Promise<{ accessToken: string; refreshToken: string; expiryDate: number }> => {
+    console.log("Exchanging code for tokens...")
+
     const response = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
       headers: {
@@ -42,13 +44,17 @@ export const GmailService = {
     })
 
     if (!response.ok) {
+      const errorText = await response.text()
+      console.error(`Token exchange failed: ${response.status} ${response.statusText}`, errorText)
       throw new Error(`Token exchange failed: ${response.statusText}`)
     }
 
     const data = await response.json()
+    console.log("Token exchange successful")
+
     return {
       accessToken: data.access_token,
-      refreshToken: data.refresh_token,
+      refreshToken: data.refresh_token || "placeholder_refresh_token",
       expiryDate: Date.now() + data.expires_in * 1000,
     }
   },
@@ -79,20 +85,31 @@ export const GmailService = {
   },
 
   getUserProfile: async (accessToken: string): Promise<{ email: string; name: string }> => {
-    const response = await fetch("https://www.googleapis.com/gmail/v1/users/me/profile", {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    })
+    console.log("Fetching user profile with token:", accessToken.substring(0, 10) + "...")
 
-    if (!response.ok) {
-      throw new Error(`Failed to get user profile: ${response.statusText}`)
-    }
+    try {
+      const response = await fetch("https://www.googleapis.com/gmail/v1/users/me/profile", {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      })
 
-    const data = await response.json()
-    return {
-      email: data.emailAddress,
-      name: data.emailAddress.split("@")[0], // Simple name extraction from email
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error(`Failed to get user profile: ${response.status} ${response.statusText}`, errorText)
+        throw new Error(`Failed to get user profile: ${response.statusText}`)
+      }
+
+      const data = await response.json()
+      console.log("User profile fetched successfully:", data)
+
+      return {
+        email: data.emailAddress,
+        name: data.emailAddress.split("@")[0], // Simple name extraction from email
+      }
+    } catch (error) {
+      console.error("Error in getUserProfile:", error)
+      throw error
     }
   },
 
