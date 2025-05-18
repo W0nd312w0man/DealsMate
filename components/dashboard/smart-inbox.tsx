@@ -27,6 +27,10 @@ import {
   ChevronUp,
   Building,
   Mail,
+  Copy,
+  Eye,
+  EyeOff,
+  CheckCircle,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { analyzeEmail } from "@/services/email-analysis-service"
@@ -36,6 +40,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { useEmailViewPreferences } from "@/hooks/use-email-view-preferences"
 import { EmailInlineView } from "@/components/email/email-inline-view"
 import Link from "next/link"
+import { GmailService } from "@/services/gmail-service"
 
 interface Email {
   id: string
@@ -91,6 +96,58 @@ export function SmartInbox({
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
   const [inlineViewEmailId, setInlineViewEmailId] = useState<string | null>(null)
   const [isPanelOpen, setIsPanelOpen] = useState(false)
+
+  // Gmail authentication states
+  const [gmailAccessToken, setGmailAccessToken] = useState<string | null>(null)
+  const [gmailRefreshToken, setGmailRefreshToken] = useState<string | null>(null)
+  const [gmailTokenExpiry, setGmailTokenExpiry] = useState<string | null>(null)
+  const [showToken, setShowToken] = useState(false)
+  const [copySuccess, setCopySuccess] = useState(false)
+  const [userEmail, setUserEmail] = useState<string | null>(null)
+
+  // Check for Gmail tokens on component mount
+  useEffect(() => {
+    const accessToken = sessionStorage.getItem("gmail_access_token")
+    const refreshToken = sessionStorage.getItem("gmail_refresh_token")
+    const tokenExpiry = sessionStorage.getItem("gmail_token_expiry")
+
+    if (accessToken) {
+      setGmailAccessToken(accessToken)
+      setGmailRefreshToken(refreshToken)
+      setGmailTokenExpiry(tokenExpiry)
+
+      // Fetch user profile if we have a token
+      const fetchUserProfile = async () => {
+        try {
+          const profile = await GmailService.getUserProfile(accessToken)
+          setUserEmail(profile.email)
+          console.log("Fetched user profile:", profile)
+        } catch (error) {
+          console.error("Error fetching user profile:", error)
+        }
+      }
+
+      fetchUserProfile()
+    }
+  }, [])
+
+  // Handle copying token to clipboard
+  const copyTokenToClipboard = () => {
+    if (gmailAccessToken) {
+      navigator.clipboard.writeText(gmailAccessToken)
+      setCopySuccess(true)
+      toast({
+        title: "Token Copied",
+        description: "Access token copied to clipboard",
+        duration: 2000,
+      })
+
+      // Reset copy success after 2 seconds
+      setTimeout(() => {
+        setCopySuccess(false)
+      }, 2000)
+    }
+  }
 
   // Update filter when prop changes
   useEffect(() => {
@@ -467,6 +524,9 @@ export function SmartInbox({
     )
   }
 
+  // Determine if Gmail is connected
+  const isGmailConnected = !!gmailAccessToken
+
   return (
     <Card className={cn("shadow-soft card-hover overflow-hidden", className)}>
       <div className="h-1 w-full bg-gradient-to-r from-blue-500 to-purple-500"></div>
@@ -474,7 +534,7 @@ export function SmartInbox({
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="text-xl font-poppins text-purple-700">Smart Inbox</CardTitle>
-            <CardDescription>{showUnreadOnly ? "Showing unread messages only" : "No unread messages"}</CardDescription>
+            <CardDescription>{userEmail ? `Connected to ${userEmail}` : "No unread messages"}</CardDescription>
           </div>
 
           {isSetUp ? (
@@ -530,6 +590,51 @@ export function SmartInbox({
           )}
         </div>
       </CardHeader>
+
+      {isGmailConnected && (
+        <div className="px-6 py-3 bg-blue-50 border-y border-blue-100">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-medium text-blue-700">Gmail Access Token</h3>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-blue-600 hover:text-blue-800 hover:bg-blue-100"
+                onClick={() => setShowToken(!showToken)}
+              >
+                {showToken ? <EyeOff className="h-4 w-4 mr-1" /> : <Eye className="h-4 w-4 mr-1" />}
+                {showToken ? "Hide" : "Show"}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-blue-600 hover:text-blue-800 hover:bg-blue-100"
+                onClick={copyTokenToClipboard}
+                disabled={!gmailAccessToken}
+              >
+                {copySuccess ? (
+                  <CheckCircle className="h-4 w-4 mr-1 text-green-500" />
+                ) : (
+                  <Copy className="h-4 w-4 mr-1" />
+                )}
+                {copySuccess ? "Copied!" : "Copy"}
+              </Button>
+            </div>
+          </div>
+
+          {showToken && gmailAccessToken && (
+            <div className="bg-gray-100 p-2 rounded-md overflow-x-auto">
+              <pre className="text-xs font-mono text-gray-800 whitespace-pre-wrap break-all">{gmailAccessToken}</pre>
+            </div>
+          )}
+
+          {gmailTokenExpiry && (
+            <div className="mt-2 text-xs text-blue-600">
+              Token expires: {new Date(Number.parseInt(gmailTokenExpiry)).toLocaleString()}
+            </div>
+          )}
+        </div>
+      )}
 
       {isSetUp ? (
         <CardContent>
@@ -643,7 +748,7 @@ export function SmartInbox({
                                       <div key={attachment.id} className="flex items-center gap-1 text-xs">
                                         <FileText className="h-3 w-3 text-purple-500" />
                                         <span className="truncate">{attachment.fileName}</span>
-                                        <span className="text-muted-foreground ml-auto">
+                                        <span className="text-xs text-muted-foreground ml-auto">
                                           {(attachment.fileSize / 1024 / 1024).toFixed(1)} MB
                                         </span>
                                       </div>

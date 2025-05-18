@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
+import { GmailService } from "@/services/gmail-service"
 
 export default function GmailAuthSuccessPage() {
   const router = useRouter()
@@ -23,6 +24,21 @@ export default function GmailAuthSuccessPage() {
       sessionStorage.setItem("gmail_access_token", accessToken)
       sessionStorage.setItem("gmail_refresh_token", refreshToken)
       sessionStorage.setItem("gmail_token_expiry", expiryTime.toString())
+
+      // Fetch and store user profile
+      const fetchUserProfile = async () => {
+        try {
+          const userProfile = await GmailService.getUserProfile(accessToken)
+          sessionStorage.setItem("gmail_user_email", userProfile.email)
+          sessionStorage.setItem("gmail_user_name", userProfile.name)
+
+          console.log("Stored user profile:", userProfile)
+        } catch (error) {
+          console.error("Error fetching user profile:", error)
+        }
+      }
+
+      fetchUserProfile()
 
       // Show success toast
       toast({
