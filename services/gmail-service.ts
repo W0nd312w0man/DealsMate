@@ -2,107 +2,252 @@
 
 import type { EmailCompose } from "@/types/gmail"
 
-// Mock service with no actual API calls
+// Gmail service with hardcoded credentials
 export const GmailService = {
-  // Mock functions that return static data without making API calls
-  getAuthUrl: (redirectUri: string, state: string): string => {
-    // Return a mock URL without making an API call
-    return "#mock-auth-url"
+  // Google API credentials
+  clientId: "1076146557292-34uhdpoavubdhjs02isk4imnrfcljing.apps.googleusercontent.com",
+  clientSecret: "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",
+
+  getAuthUrl: (redirectUri: string, state = ""): string => {
+    const scopes = [
+      "https://www.googleapis.com/auth/gmail.readonly",
+      "https://www.googleapis.com/auth/gmail.send",
+      "https://www.googleapis.com/auth/gmail.labels",
+      "https://www.googleapis.com/auth/gmail.modify",
+    ].join(" ")
+
+    return `https://accounts.google.com/o/oauth2/v2/auth?client_id=${
+      GmailService.clientId
+    }&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(
+      scopes,
+    )}&access_type=offline&prompt=consent&state=${state}`
   },
 
   exchangeCodeForTokens: async (
     code: string,
     redirectUri: string,
   ): Promise<{ accessToken: string; refreshToken: string; expiryDate: number }> => {
-    // Return mock tokens without making an API call
+    const response = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        code,
+        client_id: GmailService.clientId,
+        client_secret: GmailService.clientSecret,
+        redirect_uri: redirectUri,
+        grant_type: "authorization_code",
+      }),
+    })
+
+    if (!response.ok) {
+      throw new Error(`Token exchange failed: ${response.statusText}`)
+    }
+
+    const data = await response.json()
     return {
-      accessToken: "mock_access_token",
-      refreshToken: "mock_refresh_token",
-      expiryDate: Date.now() + 3600000, // 1 hour
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token,
+      expiryDate: Date.now() + data.expires_in * 1000,
     }
   },
 
   refreshAccessToken: async (refreshToken: string): Promise<{ accessToken: string; expiryDate: number }> => {
-    // Return a mock refreshed token without making an API call
+    const response = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        refresh_token: refreshToken,
+        client_id: GmailService.clientId,
+        client_secret: GmailService.clientSecret,
+        grant_type: "refresh_token",
+      }),
+    })
+
+    if (!response.ok) {
+      throw new Error(`Token refresh failed: ${response.statusText}`)
+    }
+
+    const data = await response.json()
     return {
-      accessToken: "mock_refreshed_access_token",
-      expiryDate: Date.now() + 3600000, // 1 hour
+      accessToken: data.access_token,
+      expiryDate: Date.now() + data.expires_in * 1000,
     }
   },
 
   getUserProfile: async (accessToken: string): Promise<{ email: string; name: string }> => {
-    // Return mock user profile without making an API call
+    const response = await fetch("https://www.googleapis.com/gmail/v1/users/me/profile", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to get user profile: ${response.statusText}`)
+    }
+
+    const data = await response.json()
     return {
-      email: "mockuser@example.com",
-      name: "Mock User",
+      email: data.emailAddress,
+      name: data.emailAddress.split("@")[0], // Simple name extraction from email
     }
   },
 
+  // Other Gmail API methods remain the same...
   listLabels: async (accessToken: string): Promise<any[]> => {
-    // Return mock labels without making an API call
-    return [
-      { id: "INBOX", name: "Inbox", type: "system" },
-      { id: "SENT", name: "Sent", type: "system" },
-      { id: "STARRED", name: "Starred", type: "system" },
-    ]
+    const response = await fetch("https://www.googleapis.com/gmail/v1/users/me/labels", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to list labels: ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    return data.labels || []
   },
 
-  listThreads: async (accessToken: string, query: string): Promise<{ threads: any[] }> => {
-    // Return mock threads without making an API call
+  listThreads: async (accessToken: string, query = ""): Promise<{ threads: any[] }> => {
+    const url = new URL("https://www.googleapis.com/gmail/v1/users/me/threads")
+    if (query) {
+      url.searchParams.append("q", query)
+    }
+    url.searchParams.append("maxResults", "20")
+
+    const response = await fetch(url.toString(), {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to list threads: ${response.statusText}`)
+    }
+
+    const data = await response.json()
     return {
-      threads: [],
+      threads: data.threads || [],
     }
   },
 
   getThread: async (accessToken: string, threadId: string): Promise<any> => {
-    // Return a mock thread without making an API call
-    return {
-      id: "thread-1",
-      messages: [],
+    const response = await fetch(`https://www.googleapis.com/gmail/v1/users/me/threads/${threadId}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to get thread: ${response.statusText}`)
     }
+
+    return await response.json()
   },
 
   getMessage: async (accessToken: string, messageId: string): Promise<any> => {
-    // Return a mock message without making an API call
-    return {
-      id: "message-1",
-      threadId: "thread-1",
-      labelIds: [],
-      payload: {
-        headers: [],
-        body: { data: "" },
+    const response = await fetch(`https://www.googleapis.com/gmail/v1/users/me/messages/${messageId}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
       },
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to get message: ${response.statusText}`)
     }
+
+    return await response.json()
   },
 
   sendEmail: async (accessToken: string, email: EmailCompose): Promise<string> => {
-    // Return a mock message ID without making an API call
-    return "mock-message-id"
+    // Implementation for sending emails
+    // This would require creating a MIME message and using the gmail.users.messages.send endpoint
+    return "mock-message-id" // Placeholder
   },
 
   markAsRead: async (accessToken: string, messageId: string): Promise<void> => {
-    // Do nothing, no API call
+    await fetch(`https://www.googleapis.com/gmail/v1/users/me/messages/${messageId}/modify`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        removeLabelIds: ["UNREAD"],
+      }),
+    })
   },
 
   markAsUnread: async (accessToken: string, messageId: string): Promise<void> => {
-    // Do nothing, no API call
+    await fetch(`https://www.googleapis.com/gmail/v1/users/me/messages/${messageId}/modify`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        addLabelIds: ["UNREAD"],
+      }),
+    })
   },
 
   toggleStar: async (accessToken: string, messageId: string, starred: boolean): Promise<void> => {
-    // Do nothing, no API call
+    await fetch(`https://www.googleapis.com/gmail/v1/users/me/messages/${messageId}/modify`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        addLabelIds: starred ? ["STARRED"] : [],
+        removeLabelIds: !starred ? ["STARRED"] : [],
+      }),
+    })
   },
 
   trashMessage: async (accessToken: string, messageId: string): Promise<void> => {
-    // Do nothing, no API call
+    await fetch(`https://www.googleapis.com/gmail/v1/users/me/messages/${messageId}/trash`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
   },
 
   getAttachment: async (accessToken: string, messageId: string, attachmentId: string): Promise<string> => {
-    // Return a mock attachment without making an API call
-    return "mock_attachment_data"
+    const response = await fetch(
+      `https://www.googleapis.com/gmail/v1/users/me/messages/${messageId}/attachments/${attachmentId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      },
+    )
+
+    if (!response.ok) {
+      throw new Error(`Failed to get attachment: ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    return data.data // Base64 encoded attachment data
   },
 
   getUnreadCount: async (accessToken: string): Promise<number> => {
-    // Return a mock count without making an API call
-    return 0
+    const response = await fetch("https://www.googleapis.com/gmail/v1/users/me/messages?q=is:unread&maxResults=1", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to get unread count: ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    return data.resultSizeEstimate || 0
   },
 }

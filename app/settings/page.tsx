@@ -5,13 +5,38 @@ import { BreadcrumbNav } from "@/components/breadcrumb-nav"
 import { EmailViewSettings } from "@/components/settings/email-view-settings"
 import { NotificationSettings } from "@/components/settings/notification-settings"
 import { PageHeader } from "@/components/ui/page-header"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams, useRouter } from "next/navigation"
 import { Mail } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useState } from "react"
 
 export default function SettingsPage() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const defaultTab = searchParams.get("tab") || "general"
+  const [isConnecting, setIsConnecting] = useState(false)
+
+  const handleGmailConnect = () => {
+    setIsConnecting(true)
+
+    // Using the provided Google API credentials
+    const clientId = "1076146557292-34uhdpoavubdhjs02isk4imnrfcljing.apps.googleusercontent.com"
+    const redirectUri = `${window.location.origin}/auth/gmail/callback`
+
+    // Define the scopes needed for Gmail access
+    const scopes = [
+      "https://www.googleapis.com/auth/gmail.readonly",
+      "https://www.googleapis.com/auth/gmail.send",
+      "https://www.googleapis.com/auth/gmail.labels",
+      "https://www.googleapis.com/auth/gmail.modify",
+    ].join(" ")
+
+    // Construct the OAuth URL
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scopes)}&access_type=offline&prompt=consent`
+
+    // Redirect to Google's authentication page
+    window.location.href = authUrl
+  }
 
   return (
     <div className="container mx-auto p-4 space-y-6">
@@ -62,8 +87,12 @@ export default function SettingsPage() {
                       </p>
                     </div>
                   </div>
-                  <Button className="bg-gradient-to-r from-purple-600 to-pink-500 hover:opacity-90 transition-opacity">
-                    Connect Gmail
+                  <Button
+                    className="bg-gradient-to-r from-purple-600 to-pink-500 hover:opacity-90 transition-opacity"
+                    onClick={handleGmailConnect}
+                    disabled={isConnecting}
+                  >
+                    {isConnecting ? "Connecting..." : "Connect Gmail"}
                   </Button>
                 </div>
               </div>
