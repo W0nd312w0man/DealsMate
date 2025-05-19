@@ -18,7 +18,10 @@ import {
   Building,
   Mail,
   Phone,
+  Milestone,
+  ListChecks,
 } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { WorkspaceTimeline } from "@/components/workspaces/workspace-timeline"
 import { useWorkspaceParties, type WorkspaceParty } from "@/hooks/use-workspace-parties"
 
@@ -59,6 +62,9 @@ export function WorkspaceOverview({ workspaceId }: WorkspaceOverviewProps) {
     prequalifiedAmount: "",
     parties: [] as Party[],
   })
+
+  // State for template dialog
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false)
 
   // Load workspace and parties from sessionStorage
   useEffect(() => {
@@ -150,6 +156,19 @@ export function WorkspaceOverview({ workspaceId }: WorkspaceOverviewProps) {
 
   // Empty suggestions array
   const talosSuggestions: any[] = []
+
+  // Template option handlers
+  const handleTeamMilestones = () => {
+    // Add Team Milestones logic here
+    console.log("Team Milestones selected")
+    setTemplateDialogOpen(false)
+  }
+
+  const handleSuggestedMilestones = () => {
+    // Add Suggested Milestones logic here
+    console.log("Suggested Milestones selected")
+    setTemplateDialogOpen(false)
+  }
 
   return (
     <div className="grid gap-6 md:grid-cols-3">
@@ -526,6 +545,49 @@ export function WorkspaceOverview({ workspaceId }: WorkspaceOverviewProps) {
               <CheckCircle2 className="h-4 w-4" />
               Create Task
             </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start gap-2"
+              onClick={() => setTemplateDialogOpen(true)}
+            >
+              <FileText className="h-4 w-4" />
+              Apply Template(s)
+            </Button>
+
+            {/* Template Selection Dialog */}
+            <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Select Template Type</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start gap-2 py-1.5"
+                    onClick={handleTeamMilestones}
+                  >
+                    <ListChecks className="h-4 w-4 text-purple-600" />
+                    <div className="text-left">
+                      <div className="font-medium text-sm">Team Milestones</div>
+                      <div className="text-xs text-muted-foreground">Apply standard team milestone templates</div>
+                    </div>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start gap-2 py-1.5"
+                    onClick={handleSuggestedMilestones}
+                  >
+                    <Milestone className="h-4 w-4 text-purple-600" />
+                    <div className="text-left">
+                      <div className="font-medium text-sm">Suggested Milestones</div>
+                      <div className="text-xs text-muted-foreground">Apply AI-suggested milestone templates</div>
+                    </div>
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </CardContent>
         </Card>
       </div>
