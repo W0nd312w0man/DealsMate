@@ -526,13 +526,7 @@ export function WorkspaceOverview({ workspaceId }: WorkspaceOverviewProps) {
               <CheckCircle2 className="h-4 w-4" />
               Create Task
             </Button>
-            <Button
-              variant="outline"
-              className="w-full justify-start gap-2"
-              onClick={() => {
-                alert("Template options: Team Milestones and Suggested Milestones")
-              }}
-            >
+            <Button variant="outline" className="w-full justify-start gap-2">
               <FileText className="h-4 w-4" />
               Apply Template(s)
             </Button>
