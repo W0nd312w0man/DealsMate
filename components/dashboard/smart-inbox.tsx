@@ -203,80 +203,80 @@ export function SmartInbox({
       // In a real implementation, we would fetch emails from Gmail API
       // For now, let's use mock data in the backend format
       const mockBackendResponse: BackendEmailResponse = {
-  emails: [
-    {
-      attachments: [
-        {
-          attachmentId:
-            "ANGjdJ9FL3P1DKLTasbbuxoHNR0XCdttxp7WDdZksQiAaIf0ZMwP0McvIq1eRk_5u_fbXKEvaw2rMLCtTI1a6qyyTFWK5xy22kEnw4qDb9BKEUSVb2ZcKLxN-qTtoig9D1KBbGRgtBroBqNt73huaNjMp9bav8l2MkjHOgjysor45fBM60Ziu5RB9HMN3GSAZ3V_fNZRisKc9sjNQnPN6X69P2AseNPCyLIpurEc0HYAWU6N4ise8MTpLD5VU7johEx-z9F1PAcQxQY7Kl6T9vY-qch2yPJlLNUBTeym3oupeoQFAngLJhzzrPTJ4YmMe1JZOq5KXLf7ymL2zskUE7LF1KtCo8Aq98yW9bCOA6ewG-RnK6Wf77SfS7U-DccmDrEKHREMDisMLu5OrjsH",
-          filename: "472 Oakwood Offer.pdf",
-          mimeType: "application/pdf",
-          partId: "1",
-          size: 4152194,
-        },
-      ],
-      contentType: 'multipart/mixed; boundary="000000000000253fcd0635594faf"',
-      date: "Sat, 17 May 2025 11:45:40 -0700",
-      from: "Jennifer Verde <verde.jenn@gmail.com>",
-      hasAttachments: true,
-      id: "196df913894e170f",
-      isRead: true,
-      labelIds: ["IMPORTANT", "CATEGORY_PERSONAL", "INBOX"],
-      snippet:
-        "Bruce, my clients are prepared to make an offer on Oakwood, this is our highest and best! Looking forward to speaking to you! Jennifer Verde EXP Realty",
-      subject: "Offer for Oakwood",
-      threadId: "196df913894e170f",
-    },
-    {
-      attachments: [
-        {
-          attachmentId:
-            "ANGjdJ-XYJcvM8osGuAt9Fx0jl70iz6xEWohfsdGLMWH3DevIcikBE00SvIZSxYzDTpmgqgc_4OdlH5REWdGYM7dz0KEmBHX_GUe9XBpYNAd0gCTmC0IRvqGNbEbIMKIAFNF5sqhXG881mJVOjRS8kecFL-Ww_n3qIvoC5yHrvw25Jqmy-R2ZJ-8ZKOi6Q4OUcXQLDB2Xb-1HQwg9Yj-2QrMe6Se0jLZ2BPlnkbh3-VNq5vbnURxDCtgxtgEfQ3sjPnMjbRjeqmtnbMz-ONyb4sacyNQvu1fEiTflV2L4xbP4e8uv82Z3FtVOQtJS6UJxBFdTWy0raZCCCuK8aoQYM64ZqtdyEfbknjpY7pn_7OM5KwwkVIhcOwp047-uJe83ezdQJLdDXHIQxSzSfeh",
-          filename: "135 Maple Drive.pdf",
-          mimeType: "application/pdf",
-          partId: "1",
-          size: 543753,
-        },
-      ],
-      contentType: 'multipart/mixed; boundary="000000000000aa30c10635593eda"',
-      date: "Sat, 17 May 2025 11:41:08 -0700",
-      from: "Sam Lane <lanesammy61@gmail.com>",
-      hasAttachments: true,
-      id: "196df8cfe1861465",
-      isRead: true,
-      labelIds: ["IMPORTANT", "CATEGORY_PERSONAL", "INBOX"],
-      snippet:
-        "Bruce, let's open escrow! We have an accepted offer. Title company will be reaching out directly. Thank you, MOD Lux Realty Sammy Lane",
-      subject: "135 Maple Drive | Offer Accepted",
-      threadId: "196df8cfe1861465",
-    },
-    {
-      contentType: 'multipart/alternative; boundary="0000000000000216fa0634fba6b5"',
-      date: "Mon, 12 May 2025 20:01:15 -0700",
-      from: "Sam Lane <lanesammy61@gmail.com>",
-      hasAttachments: false,
-      id: "196c7971023983ad",
-      isRead: true,
-      labelIds: ["IMPORTANT", "CATEGORY_PERSONAL", "INBOX"],
-      snippet:
-        "Bruce, my clients are interested in the property but are worried about the water marks on the ceiling. Can you give me more details? Sam Lane MODE LUX Realty",
-      subject: "Offer Main Street",
-      threadId: "196c7971023983ad",
-    },
-    {
-      contentType: 'multipart/alternative; boundary="000000000000218aaa0634fba0a4"',
-      date: "Mon, 12 May 2025 19:59:38 -0700",
-      from: "Jennifer Verde <peppercorncottage.la@gmail.com>",
-      hasAttachments: false,
-      id: "196c7958aac44ebe",
-      isRead: true,
-      labelIds: ["CATEGORY_PERSONAL", "INBOX"],
-      snippet: "Bruce, we scheduled the inspection for next week Thursday May 22nd. See you there!",
-      subject: "789 Cedar Avenue, Boise ID 83702 Inspection",
-      threadId: "196c7958aac44ebe",
-    },
-  ],
-};
+        emails: [
+          {
+            attachments: [
+              {
+                attachmentId:
+                  "ANGjdJ9FL3P1DKLTasbbuxoHNR0XCdttxp7WDdZksQiAaIf0ZMwP0McvIq1eRk_5u_fbXKEvaw2rMLCtTI1a6qyyTFWK5xy22kEnw4qDb9BKEUSVb2ZcKLxN-qTtoig9D1KBbGRgtBroBqNt73huaNjMp9bav8l2MkjHOgjysor45fBM60Ziu5RB9HMN3GSAZ3V_fNZRisKc9sjNQnPN6X69P2AseNPCyLIpurEc0HYAWU6N4ise8MTpLD5VU7johEx-z9F1PAcQxQY7Kl6T9vY-qch2yPJlLNUBTeym3oupeoQFAngLJhzzrPTJ4YmMe1JZOq5KXLf7ymL2zskUE7LF1KtCo8Aq98yW9bCOA6ewG-RnK6Wf77SfS7U-DccmDrEKHREMDisMLu5OrjsH",
+                filename: "50 Windmill Offer.pdf",
+                mimeType: "application/pdf",
+                partId: "1",
+                size: 4152194,
+              },
+            ],
+            contentType: 'multipart/mixed; boundary="000000000000253fcd0635594faf"',
+            date: "Sat, 17 May 2025 11:45:40 -0700",
+            from: "Jennifer Verde <verde.jenn@gmail.com>",
+            hasAttachments: true,
+            id: "196df913894e170f",
+            isRead: true,
+            labelIds: ["IMPORTANT", "CATEGORY_PERSONAL", "INBOX"],
+            snippet:
+              "Bruce, my clients are prepared to make an offer on Windwill, this is our highest and best! Looking forward to speaking to you! Jennifer Verde EXP Realty",
+            subject: "Offer for Windmill",
+            threadId: "196df913894e170f",
+          },
+          {
+            attachments: [
+              {
+                attachmentId:
+                  "ANGjdJ-XYJcvM8osGuAt9Fx0jl70iz6xEWohfsdGLMWH3DevIcikBE00SvIZSxYzDTpmgqgc_4OdlH5REWdGYM7dz0KEmBHX_GUe9XBpYNAd0gCTmC0IRvqGNbEbIMKIAFNF5sqhXG881mJVOjRS8kecFL-Ww_n3qIvoC5yHrvw25Jqmy-R2ZJ-8ZKOi6Q4OUcXQLDB2Xb-1HQwg9Yj-2QrMe6Se0jLZ2BPlnkbh3-VNq5vbnURxDCtgxtgEfQ3sjPnMjbRjeqmtnbMz-ONyb4sacyNQvu1fEiTflV2L4xbP4e8uv82Z3FtVOQtJS6UJxBFdTWy0raZCCCuK8aoQYM64ZqtdyEfbknjpY7pn_7OM5KwwkVIhcOwp047-uJe83ezdQJLdDXHIQxSzSfeh",
+                filename: "22 Colonial Drive.pdf",
+                mimeType: "application/pdf",
+                partId: "1",
+                size: 543753,
+              },
+            ],
+            contentType: 'multipart/mixed; boundary="000000000000aa30c10635593eda"',
+            date: "Sat, 17 May 2025 11:41:08 -0700",
+            from: "Sam Lane <lanesammy61@gmail.com>",
+            hasAttachments: true,
+            id: "196df8cfe1861465",
+            isRead: true,
+            labelIds: ["IMPORTANT", "CATEGORY_PERSONAL", "INBOX"],
+            snippet:
+              "Bruce, let&#39;s open escrow! We have an accepted offer. Title company will be reaching out directly. Thank you, MOD Lux Reatly Sammy Lane",
+            subject: "73 Kent Cornwall Rd | Offer Accepted",
+            threadId: "196df8cfe1861465",
+          },
+          {
+            contentType: 'multipart/alternative; boundary="0000000000000216fa0634fba6b5"',
+            date: "Mon, 12 May 2025 20:01:15 -0700",
+            from: "Sam Lane <lanesammy61@gmail.com>",
+            hasAttachments: false,
+            id: "196c7971023983ad",
+            isRead: true,
+            labelIds: ["IMPORTANT", "CATEGORY_PERSONAL", "INBOX"],
+            snippet:
+              "Bruce, my clients are interested in the property but are worried about the water marks on the ceiling. Can you give me more details? Sam Lane MODE LUX Realty",
+            subject: "Offer Main Street",
+            threadId: "196c7971023983ad",
+          },
+          {
+            contentType: 'multipart/alternative; boundary="000000000000218aaa0634fba0a4"',
+            date: "Mon, 12 May 2025 19:59:38 -0700",
+            from: "Jennifer Verde <peppercorncottage.la@gmail.com>",
+            hasAttachments: false,
+            id: "196c7958aac44ebe",
+            isRead: true,
+            labelIds: ["CATEGORY_PERSONAL", "INBOX"],
+            snippet: "Bruce, we scheduled the inspection for next week Thursday May 22nd. See you there!",
+            subject: "2458 Salzburge Street, Whittier CA 90601 Inspection",
+            threadId: "196c7958aac44ebe",
+          },
+        ],
+      }
 
       // Transform backend emails to our format
       const transformedEmails: Email[] = mockBackendResponse.emails.map((backendEmail) => {
