@@ -18,10 +18,32 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function WorkspaceDetailsPage({ params }: { params: { id: string } }) {
   const [showConversionDialog, setShowConversionDialog] = useState(false)
+  const [isArchiving, setIsArchiving] = useState(false)
   const [isArchived, setIsArchived] = useState(false)
+
+  // In a real app, you would fetch the workspace data based on the ID
+  const workspace = {
+    id: params.id,
+    name: "",
+    isArchived: isArchived,
+    createdDate: "",
+    updatedDate: "",
+    parties: [],
+  }
+
+  const handleArchiveToggle = async () => {
+    setIsArchiving(true)
+
+    // In a real app, this would call an API to archive/unarchive the workspace
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+
+    setIsArchived(!isArchived)
+    setIsArchiving(false)
+  }
 
   return (
     <div className="container mx-auto p-4 space-y-6">
+      {/* Add BreadcrumbNav component */}
       <BreadcrumbNav />
 
       <div className="flex items-center gap-2">
@@ -33,8 +55,10 @@ export default function WorkspaceDetailsPage({ params }: { params: { id: string 
         </Button>
       </div>
 
+      {/* Workspace Header */}
       <WorkspaceHeader workspaceId={params.id} />
 
+      {/* Workspace Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList className="bg-background/50 border border-purple-800/20">
           <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -65,6 +89,7 @@ export default function WorkspaceDetailsPage({ params }: { params: { id: string 
         </TabsContent>
       </Tabs>
 
+      {/* Quick Actions */}
       <div className="fixed bottom-6 right-6 flex flex-col gap-2">
         <TooltipProvider>
           <Tooltip>
@@ -84,12 +109,14 @@ export default function WorkspaceDetailsPage({ params }: { params: { id: string 
         </TooltipProvider>
       </div>
 
+      {/* Workspace Conversion Dialog */}
       <WorkspaceConversionDialog
         workspaceId={params.id}
         open={showConversionDialog}
         onOpenChange={setShowConversionDialog}
       />
 
+      {/* Add PageNavigation component */}
       <PageNavigation
         prevPage={{ url: "/workspaces", label: "Workspaces" }}
         nextPage={{ url: "/transactions", label: "Transactions" }}
